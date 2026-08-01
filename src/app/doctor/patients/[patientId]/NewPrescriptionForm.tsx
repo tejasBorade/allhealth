@@ -1,0 +1,161 @@
+"use client";
+
+import * as React from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Alert from "@mui/material/Alert";
+import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import { createPrescription } from "./actions";
+
+interface FormValues {
+  followUpDate: string;
+  notes: string;
+  medicines: {
+    medicationName: string;
+    dosage: string;
+    frequencyCode: string;
+    durationDays: number;
+  }[];
+}
+
+export default function NewPrescriptionForm({ patientId }: { patientId: string }) {
+  const [error, setError] = React.useState<string | null>(null);
+  const [success, setSuccess] = React.useState(false);
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<FormValues>({
+    defaultValues: {
+      followUpDate: "",
+      notes: "",
+      medicines: [{ medicationName: "", dosage: "", frequencyCode: "1-0-1", durationDays: 5 }],
+    },
+  });
+  const { fields, append, remove } = useFieldArray({ control, name: "medicines" });
+
+  const onSubmit = async (values: FormValues) => {
+    setError(null);
+    setSuccess(false);
+    const result = await createPrescription(patientId, {
+      followUpDate: values.followUpDate || null,
+      notes: values.notes,
+      medicines: values.medicines.map((m) => ({
+        ...m,
+        durationDays: Number(m.durationDays),
+      })),
+    });
+    if (result?.error) {
+      setError(result.error);
+      return;
+    }
+    setSuccess(true);
+    reset();
+  };
+
+  return (
+    <Card variant="outlined" sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Write a prescription
+        </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Prescription saved.
+          </Alert>
+        )}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack spacing={2}>
+            {fields.map((field, index) => (
+              <Box
+                key={field.id}
+                sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}
+              >
+                <TextField
+                  label="Medication"
+                  size="small"
+                  required
+                  {...register(`medicines.${index}.medicationName` as const, {
+                    required: true,
+                  })}
+                />
+                <TextField
+                  label="Dosage"
+                  size="small"
+                  placeholder="e.g. 500mg"
+                  required
+                  {...register(`medicines.${index}.dosage` as const, { required: true })}
+                />
+                <TextField
+                  label="Frequency"
+                  size="small"
+                  placeholder="e.g. 1-0-1, BD, TDS"
+                  required
+                  {...register(`medicines.${index}.frequencyCode` as const, {
+                    required: true,
+                  })}
+                />
+                <TextField
+                  label="Duration (days)"
+                  size="small"
+                  type="number"
+                  required
+                  sx={{ width: 140 }}
+                  {...register(`medicines.${index}.durationDays` as const, {
+                    required: true,
+                    valueAsNumber: true,
+                    min: 1,
+                  })}
+                />
+                <IconButton
+                  aria-label="Remove medicine"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+            <Button
+              startIcon={<AddIcon />}
+              onClick={() =>
+                append({ medicationName: "", dosage: "", frequencyCode: "1-0-1", durationDays: 5 })
+              }
+              sx={{ alignSelf: "start" }}
+            >
+              Add medicine
+            </Button>
+
+            <TextField
+              label="Follow-up / routine checkup date"
+              type="date"
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ width: 260 }}
+              {...register("followUpDate")}
+            />
+            <TextField label="Notes" multiline minRows={2} {...register("notes")} />
+
+            <Button type="submit" variant="contained" disabled={isSubmitting} sx={{ alignSelf: "start" }}>
+              {isSubmitting ? "Saving..." : "Save prescription"}
+            </Button>
+          </Stack>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}

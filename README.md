@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FriendlyHealthy
 
-## Getting Started
+Role-based healthcare app connecting patients, doctors, doctor staff, and
+admins — doctor search, appointment booking with alerts, prescriptions with
+dosage/frequency/duration-driven medication reminders, doctor-maintained
+medical records, staff billing + report uploads.
 
-First, run the development server:
+Stack: Next.js (App Router, TypeScript) + Supabase (Postgres/Auth/Storage/RLS)
++ MUI + Redux Toolkit, deployed on Vercel with Vercel Cron driving alert
+dispatch. Full build plan: see the project's saved plan file.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Setup
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Copy `.env.example` to `.env.local` and fill in your Supabase project's URL
+   and anon key (Project Settings → API in the Supabase dashboard).
+2. Install deps: `npm install`.
+3. Apply migrations to your Supabase project: `npx supabase link --project-ref <ref>`
+   then `npx supabase db push` (or run against a local stack with
+   `npx supabase start` if you have Docker installed).
+4. `npm run dev` and open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Bootstrapping the first admin
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Registration only offers patient/doctor/staff roles (admin accounts aren't
+self-serve, by design). To create the first admin:
 
-## Learn More
+1. Register a normal account through `/register` (any role).
+2. In the Supabase SQL editor, run:
+   ```sql
+   update public.profiles set role = 'admin', approved = true where id = '<user-uuid>';
+   ```
+   (find the uuid in Authentication → Users in the Supabase dashboard).
+3. Sign out and back in — you'll land on `/admin`, where you can approve any
+   subsequent doctor/staff signups from the UI.
 
-To learn more about Next.js, take a look at the following resources:
+## Project status
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Phase 0 (auth, roles, RLS-backed approval flow) is done. Doctor
+search/appointments/prescriptions/medical records/billing, the alerts engine,
+and file uploads are still to be built — see the saved plan for the full
+phase breakdown.
