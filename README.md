@@ -35,7 +35,37 @@ self-serve, by design). To create the first admin:
 
 ## Project status
 
-Phase 0 (auth, roles, RLS-backed approval flow) is done. Doctor
-search/appointments/prescriptions/medical records/billing, the alerts engine,
-and file uploads are still to be built — see the saved plan for the full
-phase breakdown.
+Phase 0 (auth, roles, RLS-backed approval flow) and Phase 1 (doctor search,
+appointments, prescriptions, medical records, staff billing + report
+uploads) are done. Phase 2 — email reminders for appointments (24h and 1h
+before) and per-dose medication reminders, dispatched via Resend and driven
+by Vercel Cron hitting `/api/cron/appointment-reminders` and
+`/api/cron/medication-reminders` — is now also done.
+
+Known limitations for whoever deploys this next:
+
+- **Cron frequency vs. plan**: `vercel.json` schedules both cron routes at
+  `*/15 * * * *`. Vercel's Hobby plan has historically restricted cron job
+  frequency more than Pro — verify your current Vercel plan's cron limits
+  before relying on a 15-minute cadence in production. If only a coarser
+  schedule is available, the window/grace constants in
+  `src/lib/reminders/constants.ts` (`DOSE_GRACE_MS`, `STALE_WINDOW_MS`) need
+  to be widened to match — cron cadence and window width are coupled.
+- **Orphaned claims are reaped, not retried indefinitely**: each cron route
+  claims a reminder by inserting a `'pending'` `reminder_log` row before
+  sending; if the invocation dies mid-send (e.g. hits `maxDuration = 60`),
+  that row would otherwise be stuck forever, since `reminder_log_claim_idx`
+  only excludes `'failed'` rows from its uniqueness check. Both routes call
+  `reapStalePendingReminders()` first, which flips any `'pending'` row older
+  than `PENDING_STALE_MS` (`src/lib/reminders/constants.ts`) to `'failed'` so
+  it becomes eligible for re-claiming on that same or a later tick.
+- **Single fixed timezone**: reminder times are computed in one clinic-wide
+  `REMINDER_TIMEZONE` (defaulting to Asia/Kolkata) since there's no
+  per-patient timezone column yet. A future phase should add one if patients
+  end up meaningfully spread across timezones.
+- **Web push remains unbuilt**: VAPID/service-worker push notifications are
+  a future phase, not part of Phase 2's email-only reminders.
+- **No automated test framework**: this repo doesn't have one configured, so
+  Phase 2's pure helper functions (`parseFrequencyCode`, `zonedTimeToUtc`)
+  were verified manually rather than with unit tests. Worth revisiting if
+  the team wants that safety net later.

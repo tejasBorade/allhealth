@@ -10,6 +10,8 @@
 export type UserRole = "patient" | "doctor" | "staff" | "admin";
 export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
 export type BillingStatus = "pending" | "paid" | "cancelled";
+export type ReminderType = "appointment_24h" | "appointment_1h" | "medication_dose";
+export type ReminderStatus = "pending" | "sent" | "failed";
 
 export interface Database {
   public: {
@@ -239,6 +241,36 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "billing_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["profile_id"];
+          },
+        ];
+      };
+      reminder_log: {
+        Row: {
+          id: string;
+          reminder_type: ReminderType;
+          reference_id: string;
+          patient_id: string;
+          scheduled_for: string;
+          status: ReminderStatus;
+          email_to: string | null;
+          error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["reminder_log"]["Row"]> & {
+          reminder_type: ReminderType;
+          reference_id: string;
+          patient_id: string;
+          scheduled_for: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["reminder_log"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "reminder_log_patient_id_fkey";
             columns: ["patient_id"];
             isOneToOne: false;
             referencedRelation: "patients";
