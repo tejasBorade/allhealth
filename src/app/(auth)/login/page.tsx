@@ -1,16 +1,17 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import MuiLink from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
 import { createClient } from "@/lib/supabase/client";
+import AuthSplitLayout from "@/components/layout/AuthSplitLayout";
 
 interface LoginForm {
   email: string;
@@ -48,21 +49,13 @@ export default function LoginPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Paper sx={{ p: 4, width: 380 }} component="form" onSubmit={handleSubmit(onSubmit)}>
-        <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
-          Sign in
+    <AuthSplitLayout>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ width: "100%", maxWidth: 400 }}>
+        <Typography variant="h4" sx={{ mb: 0.75 }}>
+          Welcome back
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Patients, doctors, staff, and admins all sign in here.
+        <Typography color="text.secondary" sx={{ mb: 4 }}>
+          Sign in to continue to your dashboard.
         </Typography>
 
         {serverError && (
@@ -101,10 +94,13 @@ export default function LoginPage() {
           {isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
 
-        <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
-          No account? <Link href="/register">Register</Link>
+        <Typography variant="body2" sx={{ mt: 3, textAlign: "center" }}>
+          No account?{" "}
+          <MuiLink component={NextLink} href="/register" sx={{ fontWeight: 600 }}>
+            Register
+          </MuiLink>
         </Typography>
-      </Paper>
-    </Box>
+      </Box>
+    </AuthSplitLayout>
   );
 }

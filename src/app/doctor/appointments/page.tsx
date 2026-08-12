@@ -1,4 +1,3 @@
-import Typography from "@mui/material/Typography";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -6,9 +5,13 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
+import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
+import EventOutlinedIcon from "@mui/icons-material/EventOutlined";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusChip from "@/components/StatusChip";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import { updateAppointmentStatus } from "./actions";
@@ -25,9 +28,7 @@ export default async function DoctorAppointmentsPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ fontWeight: 600 }} gutterBottom>
-        Your appointments
-      </Typography>
+      <PageHeader title="Your appointments" />
 
       {error && <Typography color="error">{error.message}</Typography>}
 
@@ -44,8 +45,12 @@ export default async function DoctorAppointmentsPage() {
           <TableBody>
             {(appointments ?? []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No appointments yet.
+                <TableCell colSpan={4}>
+                  <EmptyState
+                    icon={EventOutlinedIcon}
+                    title="No appointments yet"
+                    description="Appointments booked with you will show up here."
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -61,17 +66,7 @@ export default async function DoctorAppointmentsPage() {
                   <TableCell>{profile?.full_name ?? "Unknown"}</TableCell>
                   <TableCell>{new Date(appt.appointment_at).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={appt.status}
-                      size="small"
-                      color={
-                        appt.status === "cancelled"
-                          ? "default"
-                          : appt.status === "completed"
-                            ? "success"
-                            : "primary"
-                      }
-                    />
+                    <StatusChip status={appt.status} />
                   </TableCell>
                   <TableCell align="right">
                     {appt.status === "scheduled" && (

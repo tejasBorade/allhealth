@@ -1,10 +1,24 @@
 import Typography from "@mui/material/Typography";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
+import ListItemAvatar from "@mui/material/ListItemAvatar";
 import ListItemText from "@mui/material/ListItemText";
+import Avatar from "@mui/material/Avatar";
 import Paper from "@mui/material/Paper";
+import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
+
+function initials(name?: string | null) {
+  if (!name) return "?";
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
 
 export default async function DoctorPatientsPage() {
   const { user } = await requireRole(["doctor"]);
@@ -31,35 +45,36 @@ export default async function DoctorPatientsPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ fontWeight: 600 }} gutterBottom>
-        Your patients
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Everyone you&apos;ve appointed or prescribed to.
-      </Typography>
+      <PageHeader title="Your patients" subtitle="Everyone you've appointed or prescribed to." />
 
       {error && <Typography color="error">{error.message}</Typography>}
 
       <Paper variant="outlined">
-        <List>
-          {(patients ?? []).length === 0 && (
-            <ListItemButton disabled>
-              <ListItemText primary="No patients yet." />
-            </ListItemButton>
-          )}
-          {(patients ?? []).map((patient) => (
-            <ListItemButton
-              key={patient.id}
-              component="a"
-              href={`/doctor/patients/${patient.id}`}
-            >
-              <ListItemText
-                primary={patient.full_name ?? "Unnamed patient"}
-                secondary={patient.phone ?? undefined}
-              />
-            </ListItemButton>
-          ))}
-        </List>
+        {(patients ?? []).length === 0 ? (
+          <EmptyState
+            icon={PeopleAltOutlinedIcon}
+            title="No patients yet"
+            description="Patients you appoint or prescribe to will show up here."
+          />
+        ) : (
+          <List>
+            {(patients ?? []).map((patient) => (
+              <ListItemButton
+                key={patient.id}
+                component="a"
+                href={`/doctor/patients/${patient.id}`}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: "primary.main" }}>{initials(patient.full_name)}</Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={patient.full_name ?? "Unnamed patient"}
+                  secondary={patient.phone ?? undefined}
+                />
+              </ListItemButton>
+            ))}
+          </List>
+        )}
       </Paper>
     </>
   );

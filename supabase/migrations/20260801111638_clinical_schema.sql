@@ -109,6 +109,18 @@ create policy "patients_update_admin" on public.patients
 
 create type public.appointment_status as enum ('scheduled', 'completed', 'cancelled');
 
+-- timestamptz + interval is only STABLE in Postgres (interval could carry a
+-- month component), so it can't be used inline in a GiST index expression.
+-- duration_minutes is a plain minute count, so wrapping it here is safe to
+-- mark IMMUTABLE.
+create function public.appointment_range(appointment_at timestamptz, duration_minutes int)
+returns tstzrange
+language sql
+immutable
+as $$
+  select tstzrange(appointment_at, appointment_at + (duration_minutes || ' minutes')::interval)
+$$;
+
 create table public.appointments (
   id uuid primary key default gen_random_uuid(),
   patient_id uuid not null references public.patients (profile_id),
@@ -120,7 +132,7 @@ create table public.appointments (
   created_at timestamptz not null default now(),
   constraint appointments_no_overlap exclude using gist (
     doctor_id with =,
-    tstzrange(appointment_at, appointment_at + (duration_minutes || ' minutes')::interval) with &&
+    public.appointment_range(appointment_at, duration_minutes) with &&
   ) where (status <> 'cancelled')
 );
 

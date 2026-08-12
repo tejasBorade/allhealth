@@ -6,9 +6,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusChip from "@/components/StatusChip";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import { updateBillStatus } from "./actions";
@@ -28,9 +31,10 @@ export default async function StaffBillingPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ fontWeight: 600 }} gutterBottom>
-        Billing
-      </Typography>
+      <PageHeader
+        title="Billing"
+        subtitle="Create bills for patients and track their payment status."
+      />
 
       <CreateBillForm patients={patients ?? []} />
 
@@ -50,8 +54,12 @@ export default async function StaffBillingPage() {
           <TableBody>
             {(bills ?? []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} align="center">
-                  No billing records yet.
+                <TableCell colSpan={5}>
+                  <EmptyState
+                    icon={ReceiptLongOutlinedIcon}
+                    title="No billing records yet"
+                    description="Bills you create for patients will show up here."
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -68,17 +76,7 @@ export default async function StaffBillingPage() {
                   <TableCell>{new Date(bill.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>${Number(bill.amount).toFixed(2)}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={bill.status}
-                      size="small"
-                      color={
-                        bill.status === "paid"
-                          ? "success"
-                          : bill.status === "cancelled"
-                            ? "default"
-                            : "warning"
-                      }
-                    />
+                    <StatusChip status={bill.status} />
                   </TableCell>
                   <TableCell align="right">
                     {bill.status === "pending" && (

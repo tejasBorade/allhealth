@@ -6,9 +6,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
+import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusChip from "@/components/StatusChip";
 import CancelAppointmentButton from "./CancelAppointmentButton";
 
 export default async function PatientAppointmentsPage() {
@@ -23,9 +26,10 @@ export default async function PatientAppointmentsPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ fontWeight: 600 }} gutterBottom>
-        Your appointments
-      </Typography>
+      <PageHeader
+        title="Your appointments"
+        subtitle="Track upcoming visits and review your appointment history."
+      />
 
       {error && <Typography color="error">{error.message}</Typography>}
 
@@ -42,8 +46,12 @@ export default async function PatientAppointmentsPage() {
           <TableBody>
             {(appointments ?? []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No appointments yet.
+                <TableCell colSpan={4}>
+                  <EmptyState
+                    icon={EventBusyRoundedIcon}
+                    title="No appointments yet"
+                    description="Book a visit with a doctor to see it listed here."
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -59,17 +67,7 @@ export default async function PatientAppointmentsPage() {
                   <TableCell>Dr. {profile?.full_name ?? "Unknown"}</TableCell>
                   <TableCell>{new Date(appt.appointment_at).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={appt.status}
-                      size="small"
-                      color={
-                        appt.status === "cancelled"
-                          ? "default"
-                          : appt.status === "completed"
-                            ? "success"
-                            : "primary"
-                      }
-                    />
+                    <StatusChip status={appt.status} />
                   </TableCell>
                   <TableCell align="right">
                     {appt.status === "scheduled" && (

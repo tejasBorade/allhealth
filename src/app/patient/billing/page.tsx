@@ -6,9 +6,12 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import Chip from "@mui/material/Chip";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
+import PageHeader from "@/components/PageHeader";
+import EmptyState from "@/components/EmptyState";
+import StatusChip from "@/components/StatusChip";
 
 export default async function PatientBillingPage() {
   const { user } = await requireRole(["patient"]);
@@ -22,9 +25,7 @@ export default async function PatientBillingPage() {
 
   return (
     <>
-      <Typography variant="h4" sx={{ fontWeight: 600 }} gutterBottom>
-        Billing
-      </Typography>
+      <PageHeader title="Billing" subtitle="Review your invoices and payment status." />
 
       {error && <Typography color="error">{error.message}</Typography>}
 
@@ -40,8 +41,12 @@ export default async function PatientBillingPage() {
           <TableBody>
             {(bills ?? []).length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} align="center">
-                  No billing records yet.
+                <TableCell colSpan={3}>
+                  <EmptyState
+                    icon={ReceiptLongRoundedIcon}
+                    title="No billing records yet"
+                    description="Invoices raised for your visits will show up here."
+                  />
                 </TableCell>
               </TableRow>
             )}
@@ -50,17 +55,7 @@ export default async function PatientBillingPage() {
                 <TableCell>{new Date(bill.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>${Number(bill.amount).toFixed(2)}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={bill.status}
-                    size="small"
-                    color={
-                      bill.status === "paid"
-                        ? "success"
-                        : bill.status === "cancelled"
-                          ? "default"
-                          : "warning"
-                    }
-                  />
+                  <StatusChip status={bill.status} />
                 </TableCell>
               </TableRow>
             ))}

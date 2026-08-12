@@ -12,6 +12,19 @@ export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
 export type BillingStatus = "pending" | "paid" | "cancelled";
 export type ReminderType = "appointment_24h" | "appointment_1h" | "medication_dose";
 export type ReminderStatus = "pending" | "sent" | "failed";
+export type ReportStatus = "pending" | "reviewed" | "critical";
+export type NotificationType =
+  | "appointment_booked"
+  | "appointment_cancelled"
+  | "appointment_completed"
+  | "prescription_created"
+  | "medical_record_added"
+  | "report_uploaded"
+  | "report_reviewed"
+  | "report_critical"
+  | "message_received"
+  | "account_approved"
+  | "bill_created";
 
 export interface Database {
   public: {
@@ -23,6 +36,7 @@ export interface Database {
           full_name: string | null;
           phone: string | null;
           approved: boolean;
+          data_consent_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -38,6 +52,10 @@ export interface Database {
           specialization: string | null;
           clinic_name: string | null;
           bio: string | null;
+          registration_number: string | null;
+          qualifications: string | null;
+          clinic_address: string | null;
+          clinic_phone: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["doctors"]["Row"]> & {
@@ -60,6 +78,12 @@ export interface Database {
           date_of_birth: string | null;
           gender: string | null;
           address: string | null;
+          allergies: string | null;
+          blood_group: string | null;
+          chronic_conditions: string | null;
+          emergency_contact_name: string | null;
+          emergency_contact_phone: string | null;
+          abha_number: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["patients"]["Row"]> & {
@@ -118,6 +142,7 @@ export interface Database {
           appointment_id: string | null;
           prescribed_at: string;
           follow_up_date: string | null;
+          diagnosis: string | null;
           notes: string | null;
         };
         Insert: Partial<Database["public"]["Tables"]["prescriptions"]["Row"]> & {
@@ -203,6 +228,7 @@ export interface Database {
           uploaded_by: string;
           storage_path: string;
           report_type: string;
+          status: ReportStatus;
           uploaded_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["medical_reports"]["Row"]> & {
@@ -215,6 +241,37 @@ export interface Database {
         Relationships: [
           {
             foreignKeyName: "medical_reports_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["profile_id"];
+          },
+        ];
+      };
+      dose_logs: {
+        Row: {
+          id: string;
+          prescription_medicine_id: string;
+          patient_id: string;
+          scheduled_for: string;
+          taken_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["dose_logs"]["Row"]> & {
+          prescription_medicine_id: string;
+          patient_id: string;
+          scheduled_for: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["dose_logs"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "dose_logs_prescription_medicine_id_fkey";
+            columns: ["prescription_medicine_id"];
+            isOneToOne: false;
+            referencedRelation: "prescription_medicines";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dose_logs_patient_id_fkey";
             columns: ["patient_id"];
             isOneToOne: false;
             referencedRelation: "patients";
@@ -275,6 +332,65 @@ export interface Database {
             isOneToOne: false;
             referencedRelation: "patients";
             referencedColumns: ["profile_id"];
+          },
+        ];
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: NotificationType;
+          title: string;
+          body: string | null;
+          link: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["notifications"]["Row"]> & {
+          user_id: string;
+          type: NotificationType;
+          title: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["notifications"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          recipient_id: string;
+          body: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Partial<Database["public"]["Tables"]["messages"]["Row"]> & {
+          sender_id: string;
+          recipient_id: string;
+          body: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["messages"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "messages_sender_id_fkey";
+            columns: ["sender_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey";
+            columns: ["recipient_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
           },
         ];
       };

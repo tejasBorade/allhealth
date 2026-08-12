@@ -8,6 +8,10 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
+import Box from "@mui/material/Box";
+import { alpha } from "@mui/material/styles";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import { theme } from "@/lib/theme";
 import { addMedicalRecord } from "./actions";
 
 export default function AddRecordForm({ patientId }: { patientId: string }) {
@@ -30,9 +34,26 @@ export default function AddRecordForm({ patientId }: { patientId: string }) {
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Add a medical record
-        </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 2 }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              bgcolor: alpha(theme.palette.secondary.main, 0.12),
+              color: theme.palette.secondary.main,
+            }}
+          >
+            <DescriptionOutlinedIcon fontSize="small" />
+          </Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+            Add a medical record
+          </Typography>
+        </Stack>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}

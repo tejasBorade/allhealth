@@ -8,21 +8,13 @@ import {
   reapStalePendingReminders,
 } from "@/lib/reminders/log";
 import { REMINDER_TIMEZONE, DOSE_GRACE_MS, PENDING_STALE_MS } from "@/lib/reminders/constants";
-import { zonedTimeToUtc, todayInZone } from "@/lib/reminders/timezone";
+import { zonedTimeToUtc, todayInZone, addDaysToDateStr } from "@/lib/reminders/timezone";
 import { parseFrequencyCode } from "@/lib/reminders/frequency";
 import { sendReminderEmail } from "@/lib/email/resend";
 import { medicationDoseReminderEmail } from "@/lib/email/templates";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-/** Adds (possibly negative) whole days to a YYYY-MM-DD string. */
-function addDaysToDateStr(dateStr: string, days: number): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const dt = new Date(Date.UTC(year, month - 1, day));
-  dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.toISOString().slice(0, 10);
-}
 
 export async function GET(request: Request) {
   if (!isAuthorizedCronRequest(request)) {

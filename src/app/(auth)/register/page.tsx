@@ -1,17 +1,25 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
+import NextLink from "next/link";
 import { useForm, Controller } from "react-hook-form";
 import Box from "@mui/material/Box";
-import Paper from "@mui/material/Paper";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import MuiLink from "@mui/material/Link";
 import Alert from "@mui/material/Alert";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import Stack from "@mui/material/Stack";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormHelperText from "@mui/material/FormHelperText";
+import { alpha } from "@mui/material/styles";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import MedicalServicesRoundedIcon from "@mui/icons-material/MedicalServicesRounded";
+import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { createClient } from "@/lib/supabase/client";
+import AuthSplitLayout from "@/components/layout/AuthSplitLayout";
 import type { UserRole } from "@/lib/types";
 
 interface RegisterForm {
@@ -19,7 +27,14 @@ interface RegisterForm {
   email: string;
   password: string;
   role: Exclude<UserRole, "admin">;
+  dataConsent: boolean;
 }
+
+const ROLE_OPTIONS: { value: Exclude<UserRole, "admin">; label: string; icon: typeof PersonRoundedIcon }[] = [
+  { value: "patient", label: "Patient", icon: PersonRoundedIcon },
+  { value: "doctor", label: "Doctor", icon: MedicalServicesRoundedIcon },
+  { value: "staff", label: "Doctor Staff", icon: BadgeRoundedIcon },
+];
 
 export default function RegisterPage() {
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -29,7 +44,7 @@ export default function RegisterPage() {
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterForm>({ defaultValues: { role: "patient" } });
+  } = useForm<RegisterForm>({ defaultValues: { role: "patient", dataConsent: false } });
 
   const onSubmit = async (values: RegisterForm) => {
     setServerError(null);
@@ -39,7 +54,7 @@ export default function RegisterPage() {
       email: values.email,
       password: values.password,
       options: {
-        data: { role: values.role, full_name: values.fullName },
+        data: { role: values.role, full_name: values.fullName, data_consent: values.dataConsent },
       },
     });
 
@@ -53,49 +68,56 @@ export default function RegisterPage() {
 
   if (submitted) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          bgcolor: "background.default",
-        }}
-      >
-        <Paper sx={{ p: 4, width: 420 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
+      <AuthSplitLayout>
+        <Box sx={{ width: "100%", maxWidth: 400, textAlign: "center" }}>
+          <Box
+            sx={(theme) => ({
+              width: 64,
+              height: 64,
+              borderRadius: "18px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+              mb: 3,
+              bgcolor: alpha(theme.palette.success.main, 0.12),
+              color: theme.palette.success.main,
+            })}
+          >
+            <CheckCircleRoundedIcon sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography variant="h5" sx={{ mb: 1.5 }}>
             Check your email
           </Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Confirm your address to activate your account.
           </Typography>
           {submitted !== "patient" && (
-            <Alert severity="info">
+            <Alert severity="info" sx={{ textAlign: "left", mb: 2 }}>
               {submitted === "doctor" ? "Doctor" : "Staff"} accounts also need admin
               approval before you can sign in — you&apos;ll be notified once approved.
             </Alert>
           )}
-          <Typography variant="body2" sx={{ mt: 3 }}>
-            <Link href="/login">Back to sign in</Link>
-          </Typography>
-        </Paper>
-      </Box>
+          <MuiLink component={NextLink} href="/login" sx={{ fontWeight: 600 }}>
+            Back to sign in
+          </MuiLink>
+        </Box>
+      </AuthSplitLayout>
     );
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        bgcolor: "background.default",
-      }}
-    >
-      <Paper sx={{ p: 4, width: 420 }} component="form" onSubmit={handleSubmit(onSubmit)}>
-        <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
+    <AuthSplitLayout>
+      <Box
+        component="form"
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{ width: "100%", maxWidth: 420 }}
+      >
+        <Typography variant="h4" sx={{ mb: 0.75 }}>
           Create an account
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 4 }}>
+          Get set up in a minute.
         </Typography>
 
         {serverError && (
@@ -104,24 +126,53 @@ export default function RegisterPage() {
           </Alert>
         )}
 
-        <Typography variant="subtitle2" sx={{ mt: 1, mb: 1 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1.25 }}>
           I am a
         </Typography>
         <Controller
           name="role"
           control={control}
           render={({ field }) => (
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              value={field.value}
-              onChange={(_, value) => value && field.onChange(value)}
-              sx={{ mb: 2 }}
-            >
-              <ToggleButton value="patient">Patient</ToggleButton>
-              <ToggleButton value="doctor">Doctor</ToggleButton>
-              <ToggleButton value="staff">Doctor Staff</ToggleButton>
-            </ToggleButtonGroup>
+            <Stack direction="row" spacing={1.5} sx={{ mb: 3 }}>
+              {ROLE_OPTIONS.map(({ value, label, icon: Icon }) => {
+                const active = field.value === value;
+                return (
+                  <Box
+                    key={value}
+                    onClick={() => field.onChange(value)}
+                    sx={(theme) => ({
+                      flex: 1,
+                      cursor: "pointer",
+                      textAlign: "center",
+                      py: 2,
+                      px: 1,
+                      borderRadius: "14px",
+                      border: `1.5px solid ${active ? theme.palette.primary.main : theme.palette.divider}`,
+                      bgcolor: active ? alpha(theme.palette.primary.main, 0.06) : "transparent",
+                      transition: "all 0.15s ease",
+                      "&:hover": { borderColor: theme.palette.primary.main },
+                    })}
+                  >
+                    <Icon
+                      sx={{
+                        color: active ? "primary.main" : "text.secondary",
+                        mb: 0.5,
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        display: "block",
+                        fontWeight: 600,
+                        color: active ? "primary.main" : "text.secondary",
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                  </Box>
+                );
+              })}
+            </Stack>
           )}
         />
 
@@ -155,21 +206,48 @@ export default function RegisterPage() {
           })}
         />
 
+        <Box sx={{ mt: 1 }}>
+          <FormControlLabel
+            sx={{ alignItems: "flex-start", ml: 0 }}
+            control={
+              <Checkbox
+                size="small"
+                sx={{ pt: 0.25 }}
+                {...register("dataConsent", { required: "Consent is required to create an account" })}
+              />
+            }
+            label={
+              <Typography variant="body2" color="text.secondary">
+                I consent to FriendlyHealthy processing my health data to provide care,
+                in line with India&apos;s Digital Personal Data Protection (DPDP) Act, 2023.
+              </Typography>
+            }
+          />
+          {errors.dataConsent && (
+            <FormHelperText error sx={{ ml: 1.5 }}>
+              {errors.dataConsent.message}
+            </FormHelperText>
+          )}
+        </Box>
+
         <Button
           type="submit"
           variant="contained"
           fullWidth
           size="large"
           disabled={isSubmitting}
-          sx={{ mt: 2 }}
+          sx={{ mt: 1.5 }}
         >
           {isSubmitting ? "Creating account..." : "Create account"}
         </Button>
 
-        <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
-          Already have an account? <Link href="/login">Sign in</Link>
+        <Typography variant="body2" sx={{ mt: 3, textAlign: "center" }}>
+          Already have an account?{" "}
+          <MuiLink component={NextLink} href="/login" sx={{ fontWeight: 600 }}>
+            Sign in
+          </MuiLink>
         </Typography>
-      </Paper>
-    </Box>
+      </Box>
+    </AuthSplitLayout>
   );
 }

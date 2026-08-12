@@ -1,19 +1,24 @@
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import EventIcon from "@mui/icons-material/Event";
 import { requireRole } from "@/lib/auth/requireRole";
 import AppShell from "@/components/layout/AppShell";
 
 export default async function DoctorLayout({ children }: { children: React.ReactNode }) {
-  await requireRole(["doctor"]);
+  const { user, profile } = await requireRole(["doctor"]);
 
   return (
     <AppShell
-      title="Doctor"
+      title="Doctor Dashboard"
+      userName={profile.full_name}
+      userId={user.id}
+      role="doctor"
       navItems={[
-        { label: "Dashboard", href: "/doctor", icon: DashboardIcon },
-        { label: "My Patients", href: "/doctor/patients", icon: PeopleIcon },
-        { label: "Appointments", href: "/doctor/appointments", icon: EventIcon },
+        { label: "Dashboard", href: "/doctor", icon: "dashboard" },
+        { label: "My Patients", href: "/doctor/patients", icon: "people" },
+        { label: "Appointments", href: "/doctor/appointments", icon: "event" },
+        { label: "Rx History", href: "/doctor/prescriptions", icon: "history" },
+        { label: "Lab Reports", href: "/doctor/reports", icon: "science" },
+        { label: "Messages", href: "/doctor/messages", icon: "chat" },
+        { label: "Notifications", href: "/doctor/notifications", icon: "notifications" },
+        { label: "My Profile", href: "/doctor/profile", icon: "person" },
       ]}
     >
       {children}
