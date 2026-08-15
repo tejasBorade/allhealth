@@ -19,6 +19,7 @@ import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import type { ReportStatus } from "@/lib/supabase/types";
 import { updateReportStatus } from "./actions";
+import UploadReportForm from "./UploadReportForm";
 
 const FILTERS: { label: string; value: "all" | ReportStatus }[] = [
   { label: "All", value: "all" },
@@ -64,12 +65,18 @@ export default async function DoctorReportsPage({
     reportsQuery = reportsQuery.eq("status", activeStatus);
   }
 
-  const { data: reports, error } =
-    patientIds.length > 0 ? await reportsQuery : { data: [], error: null };
+  const [{ data: reports, error }, { data: myPatients }] = await Promise.all([
+    patientIds.length > 0 ? reportsQuery : Promise.resolve({ data: [], error: null }),
+    patientIds.length > 0
+      ? supabase.from("profiles").select("id, full_name").in("id", patientIds)
+      : Promise.resolve({ data: [] }),
+  ]);
 
   return (
     <>
-      <PageHeader title="Lab Reports Inbox" subtitle="Review reports uploaded for your patients." />
+      <PageHeader title="Lab Reports Inbox" subtitle="Review and upload reports for your patients." />
+
+      <UploadReportForm patients={myPatients ?? []} />
 
       <Tabs value={activeStatus} sx={{ mb: 2 }}>
         {FILTERS.map((f) => (

@@ -24,7 +24,8 @@ export type NotificationType =
   | "report_critical"
   | "message_received"
   | "account_approved"
-  | "bill_created";
+  | "bill_created"
+  | "risk_digest_flagged";
 
 export interface Database {
   public: {
@@ -109,6 +110,12 @@ export interface Database {
           duration_minutes: number;
           status: AppointmentStatus;
           notes: string | null;
+          chief_complaint: string | null;
+          bp_systolic: number | null;
+          bp_diastolic: number | null;
+          pulse_bpm: number | null;
+          weight_kg: number | null;
+          advice: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["appointments"]["Row"]> & {
@@ -391,6 +398,43 @@ export interface Database {
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
+          },
+        ];
+      };
+      patient_risk_digests: {
+        Row: {
+          id: string;
+          doctor_id: string;
+          patient_id: string;
+          computed_at: string;
+          flagged: boolean;
+          adherence_pct_recent: number | null;
+          adherence_pct_prior: number | null;
+          vitals_flag: boolean;
+          vitals_note: string | null;
+          summary_text: string | null;
+          suggested_action: string | null;
+          dismissed_at: string | null;
+        };
+        Insert: Partial<Database["public"]["Tables"]["patient_risk_digests"]["Row"]> & {
+          doctor_id: string;
+          patient_id: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["patient_risk_digests"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "patient_risk_digests_doctor_id_fkey";
+            columns: ["doctor_id"];
+            isOneToOne: false;
+            referencedRelation: "doctors";
+            referencedColumns: ["profile_id"];
+          },
+          {
+            foreignKeyName: "patient_risk_digests_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["profile_id"];
           },
         ];
       };

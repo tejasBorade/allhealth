@@ -30,6 +30,7 @@ import { REMINDER_TIMEZONE } from "@/lib/reminders/constants";
 import { todayInZone, addDaysToDateStr, zonedTimeToUtc } from "@/lib/reminders/timezone";
 import { scheduledDosesInRange, type PrescriptionMedicineSchedule } from "@/lib/medication/doseSchedule";
 import AppointmentRow from "./AppointmentRow";
+import RiskRadarCard from "./RiskRadarCard";
 
 const WEEKDAY_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -202,27 +203,49 @@ export default async function DoctorDashboard() {
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 5);
 
-  const [{ data: reports }, { data: followUpRows }, { data: conditionRows }] = await Promise.all([
-    patientIds.length > 0
-      ? supabase
-          .from("medical_reports")
-          .select("id, report_type, status, uploaded_at, patient_id, patients(profiles(full_name))")
-          .in("patient_id", patientIds)
-          .in("status", ["pending", "critical"])
-          .order("uploaded_at", { ascending: false })
-      : Promise.resolve({ data: [] as never[] }),
-    supabase
-      .from("prescriptions")
-      .select("patient_id, follow_up_date, patients(profiles(full_name))")
-      .eq("doctor_id", user.id)
-      .lte("follow_up_date", today)
-      .order("follow_up_date", { ascending: true }),
-    patientIds.length > 0
-      ? supabase.from("patients").select("chronic_conditions").in("profile_id", patientIds)
-      : Promise.resolve({ data: [] as never[] }),
-  ]);
+  const [{ data: reports }, { data: followUpRows }, { data: conditionRows }, { data: riskDigestRows }] =
+    await Promise.all([
+      patientIds.length > 0
+        ? supabase
+            .from("medical_reports")
+            .select("id, report_type, status, uploaded_at, patient_id, patients(profiles(full_name))")
+            .in("patient_id", patientIds)
+            .in("status", ["pending", "critical"])
+            .order("uploaded_at", { ascending: false })
+        : Promise.resolve({ data: [] as never[] }),
+      supabase
+        .from("prescriptions")
+        .select("patient_id, follow_up_date, patients(profiles(full_name))")
+        .eq("doctor_id", user.id)
+        .lte("follow_up_date", today)
+        .order("follow_up_date", { ascending: true }),
+      patientIds.length > 0
+        ? supabase.from("patients").select("chronic_conditions").in("profile_id", patientIds)
+        : Promise.resolve({ data: [] as never[] }),
+      supabase
+        .from("patient_risk_digests")
+        .select(
+          "id, patient_id, adherence_pct_recent, adherence_pct_prior, vitals_note, summary_text, suggested_action, patients(profiles(full_name))"
+        )
+        .eq("doctor_id", user.id)
+        .eq("flagged", true)
+        .is("dismissed_at", null)
+        .order("computed_at", { ascending: false })
+        .limit(5),
+    ]);
   const pendingReportsCount = (reports ?? []).length;
   const criticalReportsCount = (reports ?? []).filter((r) => r.status === "critical").length;
+
+  const riskRadarRows = (riskDigestRows ?? []).map((row) => ({
+    id: row.id,
+    patientId: row.patient_id,
+    fullName: nameOf(row),
+    adherencePctRecent: row.adherence_pct_recent,
+    adherencePctPrior: row.adherence_pct_prior,
+    vitalsNote: row.vitals_note,
+    summaryText: row.summary_text,
+    suggestedAction: row.suggested_action,
+  }));
 
   // Priority follow-ups: patients overdue for a follow-up (or due today), or
   // with a critical lab report — deduped by patient, critical takes priority.
@@ -572,6 +595,8 @@ export default async function DoctorDashboard() {
               })}
             </Box>
           </Card>
+
+          <RiskRadarCard rows={riskRadarRows} />
 
           <Card sx={{ p: 2.5 }}>
             <Typography variant="subtitle1" sx={{ mb: 1.5 }}>

@@ -1,0 +1,20 @@
+name: Risk digest cron
+
+# Unlike reminder-cron.yml (15-minute cadence), the AI Patient Risk &
+# Adherence Digest only needs to recompute once a day — Vercel's free Hobby
+# plan supports that natively, but this workflow is kept consistent with
+# reminder-cron.yml's approach so both cron paths work the same way.
+
+on:
+  schedule:
+    - cron: "30 3 * * *" # ~9:00am IST
+  workflow_dispatch: {}
+
+jobs:
+  call-risk-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Risk digest
+        run: |
+          curl -sf -X GET "https://allhealth.vercel.app/api/cron/risk-digest" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

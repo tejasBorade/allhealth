@@ -6,6 +6,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
@@ -72,6 +73,15 @@ export default async function PatientAppointmentsPage() {
                   <TableCell align="right">
                     {appt.status === "scheduled" && (
                       <CancelAppointmentButton appointmentId={appt.id} />
+                    )}
+                    {appt.status === "completed" && (
+                      <Button
+                        size="small"
+                        href={`/appointments/${appt.id}/report`}
+                        target="_blank"
+                      >
+                        Download report
+                      </Button>
                     )}
                   </TableCell>
                 </TableRow>

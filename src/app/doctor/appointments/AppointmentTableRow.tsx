@@ -11,6 +11,7 @@ import StatusChip from "@/components/StatusChip";
 import { theme } from "@/lib/theme";
 import { usePatientDrawer } from "@/components/PatientDrawer/PatientDrawerContext";
 import { updateAppointmentStatus } from "./actions";
+import CompleteAppointmentDialog from "./CompleteAppointmentDialog";
 import type { AppointmentStatus } from "@/lib/supabase/types";
 
 function initialsFrom(name: string) {
@@ -69,17 +70,18 @@ export default function AppointmentTableRow({
       <TableCell align="right">
         {status === "scheduled" && (
           <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
-            <form action={updateAppointmentStatus.bind(null, appointmentId, "completed")}>
-              <Button type="submit" size="small">
-                Mark completed
-              </Button>
-            </form>
+            <CompleteAppointmentDialog appointmentId={appointmentId} />
             <form action={updateAppointmentStatus.bind(null, appointmentId, "cancelled")}>
               <Button type="submit" size="small" color="error">
                 Cancel
               </Button>
             </form>
           </Stack>
+        )}
+        {status === "completed" && (
+          <Button size="small" href={`/appointments/${appointmentId}/report`} target="_blank">
+            View report
+          </Button>
         )}
       </TableCell>
     </TableRow>

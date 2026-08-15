@@ -48,6 +48,56 @@ export function appointmentReminderEmail({
   return { subject, html };
 }
 
+interface VisitReportEmailParams {
+  patientName: string;
+  doctorName: string;
+  clinicName: string | null;
+  appointmentAt: Date;
+  chiefComplaint: string | null;
+  diagnosis: string | null;
+  medicines: { medication_name: string; dosage: string; frequency_code: string }[];
+  followUpDate: string | null;
+  reportUrl: string;
+}
+
+export function visitReportEmail({
+  patientName,
+  doctorName,
+  clinicName,
+  appointmentAt,
+  chiefComplaint,
+  diagnosis,
+  medicines,
+  followUpDate,
+  reportUrl,
+}: VisitReportEmailParams): { subject: string; html: string } {
+  const when = formatInReminderTimezone(appointmentAt);
+  const subject = `Your visit summary from Dr. ${doctorName}`;
+
+  const medsList =
+    medicines.length > 0
+      ? `<ul>${medicines
+          .map((m) => `<li>${m.medication_name} — ${m.dosage} (${m.frequency_code})</li>`)
+          .join("")}</ul>`
+      : "<p>No new medicines prescribed at this visit.</p>";
+
+  const html = `
+    <div style="font-family: sans-serif; font-size: 15px; color: #1a1a1a;">
+      <p>Hi ${patientName},</p>
+      <p>Your visit with <strong>Dr. ${doctorName}</strong>${clinicName ? ` at ${clinicName}` : ""} on ${when} is now complete. Here's a summary:</p>
+      ${chiefComplaint ? `<p><strong>Reason for visit:</strong> ${chiefComplaint}</p>` : ""}
+      ${diagnosis ? `<p><strong>Diagnosis:</strong> ${diagnosis}</p>` : ""}
+      <p><strong>Medicines:</strong></p>
+      ${medsList}
+      ${followUpDate ? `<p><strong>Follow-up:</strong> ${new Date(followUpDate).toLocaleDateString()}</p>` : ""}
+      <p><a href="${reportUrl}" style="color:#0891B2;">View &amp; download your full visit report →</a></p>
+      <p>— FriendlyHealthy</p>
+    </div>
+  `;
+
+  return { subject, html };
+}
+
 export function medicationDoseReminderEmail({
   patientName,
   medicationName,
