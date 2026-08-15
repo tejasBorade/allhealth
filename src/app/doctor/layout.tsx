@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/requireRole";
 import AppShell from "@/components/layout/AppShell";
+import { PatientDrawerProvider } from "@/components/PatientDrawer/PatientDrawerContext";
 
 export default async function DoctorLayout({ children }: { children: React.ReactNode }) {
   const { user, profile } = await requireRole(["doctor"]);
@@ -21,7 +22,7 @@ export default async function DoctorLayout({ children }: { children: React.React
         { label: "My Profile", href: "/doctor/profile", icon: "person" },
       ]}
     >
-      {children}
+      <PatientDrawerProvider>{children}</PatientDrawerProvider>
     </AppShell>
   );
 }

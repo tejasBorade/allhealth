@@ -12,12 +12,14 @@ import Box from "@mui/material/Box";
 import { alpha } from "@mui/material/styles";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import { theme } from "@/lib/theme";
+import { useToast } from "@/components/providers/ToastProvider";
 import { addMedicalRecord } from "./actions";
 
 export default function AddRecordForm({ patientId }: { patientId: string }) {
   const [error, setError] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   const handleSubmit = async (formData: FormData) => {
     setPending(true);
@@ -26,8 +28,10 @@ export default function AddRecordForm({ patientId }: { patientId: string }) {
     setPending(false);
     if (result?.error) {
       setError(result.error);
+      toast(result.error, "error");
       return;
     }
+    toast("Medical record saved.", "success");
     formRef.current?.reset();
   };
 

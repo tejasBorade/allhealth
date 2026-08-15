@@ -1,56 +1,59 @@
 import { createTheme, alpha } from "@mui/material/styles";
 
-// Modern vibrant SaaS palette: violet primary, pink secondary, cyan accent
-// for the dark sidebar's active-nav state (see AppShell.tsx).
-const violet = {
-  50: "#F5F3FF",
-  100: "#EDE9FE",
-  400: "#A78BFA",
-  500: "#8B5CF6",
-  600: "#7C3AED",
-  700: "#6D28D9",
-  900: "#4C1D95",
-  950: "#2E1065",
+// SymptoTrack-reference palette: teal/cyan primary gradient, dark-navy
+// sidebar, violet used only for condition tags — see index.html for the
+// source design reference this was matched against.
+const teal = {
+  50: "#E0F2FE",
+  100: "#BAE6FD",
+  500: "#0EA5E9",
+  600: "#0891B2",
+  700: "#0369A1",
+  900: "#0C4A6E",
 };
+const navy = { 950: "#0B1220", 900: "#0F172A" };
+const violetAccent = "#7C3AED";
 
 export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: violet[700],
-      light: violet[500],
-      dark: violet[900],
+      main: teal[600],
+      light: teal[500],
+      dark: teal[700],
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#EC4899",
-      light: "#F472B6",
-      dark: "#DB2777",
+      main: violetAccent,
+      light: "#A78BFA",
+      dark: "#5B21B6",
       contrastText: "#ffffff",
     },
-    success: { main: "#10B981", light: "#D1FAE5", dark: "#047857" },
-    warning: { main: "#F59E0B", light: "#FEF3C7", dark: "#B45309" },
-    error: { main: "#F43F5E", light: "#FFE4E6", dark: "#BE123C" },
-    info: { main: "#0EA5E9", light: "#E0F2FE", dark: "#0369A1" },
+    success: { main: "#059669", light: "#ECFDF5", dark: "#047857" },
+    warning: { main: "#D97706", light: "#FFFBEB", dark: "#92400E" },
+    error: { main: "#E11D48", light: "#FFF1F2", dark: "#9F1239" },
+    info: { main: "#2563EB", light: "#EFF6FF", dark: "#1D4ED8" },
     background: {
-      default: "#F7F6FD",
+      default: "#F0F4F8",
       paper: "#FFFFFF",
     },
     text: {
-      primary: "#1E1B2E",
-      secondary: "#6B7280",
+      primary: "#0F172A",
+      secondary: "#475569",
     },
-    divider: alpha(violet[700], 0.1),
+    divider: "#E2E8F0",
   },
   shape: {
-    borderRadius: 14,
+    borderRadius: 10,
   },
   typography: {
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-    h3: { fontWeight: 800, letterSpacing: -0.5 },
-    h4: { fontWeight: 800, letterSpacing: -0.3 },
-    h5: { fontWeight: 700 },
-    h6: { fontWeight: 700 },
+    fontFamily: "var(--font-body), system-ui, sans-serif",
+    h1: { fontFamily: "var(--font-heading)", fontWeight: 800 },
+    h2: { fontFamily: "var(--font-heading)", fontWeight: 800 },
+    h3: { fontFamily: "var(--font-heading)", fontWeight: 800, letterSpacing: -0.5 },
+    h4: { fontFamily: "var(--font-heading)", fontWeight: 800, letterSpacing: -0.3 },
+    h5: { fontFamily: "var(--font-heading)", fontWeight: 700 },
+    h6: { fontFamily: "var(--font-heading)", fontWeight: 700 },
     subtitle1: { fontWeight: 600 },
     subtitle2: { fontWeight: 600 },
     button: { textTransform: "none", fontWeight: 600 },
@@ -59,7 +62,7 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#F7F6FD",
+          backgroundColor: "#F0F4F8",
         },
       },
     },
@@ -71,9 +74,9 @@ export const theme = createTheme({
           paddingBlock: 9,
         },
         contained: {
-          boxShadow: `0 8px 20px -8px ${alpha(violet[700], 0.55)}`,
+          boxShadow: `0 8px 20px -8px ${alpha(teal[600], 0.55)}`,
           "&:hover": {
-            boxShadow: `0 10px 24px -6px ${alpha(violet[700], 0.6)}`,
+            boxShadow: `0 10px 24px -6px ${alpha(teal[600], 0.6)}`,
           },
         },
         outlined: {
@@ -86,16 +89,16 @@ export const theme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: { backgroundImage: "none" },
-        outlined: { borderColor: alpha(violet[700], 0.12) },
+        outlined: { borderColor: "#E2E8F0" },
       },
     },
     MuiCard: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 18,
-          border: `1px solid ${alpha(violet[700], 0.08)}`,
-          boxShadow: "0 1px 2px rgba(16, 24, 40, 0.04)",
+          borderRadius: 16,
+          border: "1px solid #E2E8F0",
+          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         },
       },
     },
@@ -108,8 +111,8 @@ export const theme = createTheme({
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          borderRadius: 18,
-          border: `1px solid ${alpha(violet[700], 0.08)}`,
+          borderRadius: 16,
+          border: "1px solid #E2E8F0",
         },
       },
     },
@@ -120,12 +123,12 @@ export const theme = createTheme({
           textTransform: "uppercase",
           fontSize: "0.7rem",
           letterSpacing: 0.5,
-          color: "#6B7280",
-          backgroundColor: violet[50],
-          borderBottom: `1px solid ${alpha(violet[700], 0.1)}`,
+          color: "#475569",
+          backgroundColor: teal[50],
+          borderBottom: "1px solid #E2E8F0",
         },
         root: {
-          borderBottom: `1px solid ${alpha(violet[700], 0.06)}`,
+          borderBottom: "1px solid #EDF2F7",
         },
       },
     },
@@ -133,7 +136,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           "&:last-of-type td": { borderBottom: "none" },
-          "&:hover": { backgroundColor: alpha(violet[500], 0.04) },
+          "&:hover": { backgroundColor: alpha(teal[500], 0.05) },
         },
       },
     },
@@ -173,5 +176,5 @@ export const theme = createTheme({
   },
 });
 
-export const brandGradient = `linear-gradient(135deg, ${violet[600]} 0%, #DB2777 100%)`;
-export const sidebarGradient = `linear-gradient(180deg, ${violet[950]} 0%, ${violet[900]} 55%, ${violet[700]} 100%)`;
+export const brandGradient = `linear-gradient(135deg, ${teal[600]} 0%, ${teal[700]} 100%)`;
+export const sidebarGradient = `linear-gradient(180deg, ${navy[950]} 0%, ${navy[900]} 100%)`;

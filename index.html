@@ -1,0 +1,4288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SymptoTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  /* ==========================================================================
+     1. ROOT DESIGN TOKENS
+     ========================================================================== */
+  :root {
+    /* Brand */
+    --gradient-primary: linear-gradient(135deg, #0891B2, #0369A1);
+    --color-primary: #0891B2;
+    --color-primary-dark: #0369A1;
+    --color-primary-tint: #E0F2FE;
+
+    /* Semantic */
+    --color-success: #059669;
+    --color-success-bg: #ECFDF5;
+    --color-warning: #D97706;
+    --color-warning-bg: #FFFBEB;
+    --color-critical: #E11D48;
+    --color-critical-bg: #FFF1F2;
+    --color-violet: #7C3AED;
+    --color-violet-bg: #F5F3FF;
+    --color-blue: #2563EB;
+    --color-blue-bg: #EFF6FF;
+
+    /* Neutrals */
+    --color-bg-soft: #F0F4F8;
+    --color-sidebar-dark: #0F172A;
+    --color-sidebar-darker: #0B1220;
+    --color-white: #FFFFFF;
+    --color-text: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94A3B8;
+    --color-border: #E2E8F0;
+    --color-border-soft: #EDF2F7;
+
+    /* Fonts */
+    --font-body: 'Inter', sans-serif;
+    --font-heading: 'Fraunces', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-signature: 'Caveat', cursive;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.14);
+    --shadow-panel: -8px 0 32px rgba(15, 23, 42, 0.12);
+
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-full: 999px;
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    /* Layout */
+    --sidebar-width: 220px;
+    --topbar-height: 56px;
+  }
+
+  /* ==========================================================================
+     2. RESET & BASE
+     ========================================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+  body {
+    font-family: var(--font-body);
+    background: var(--color-bg-soft);
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    margin: 0;
+    color: var(--color-text);
+  }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  ul, ol { margin: 0; padding: 0; list-style: none; }
+  button { font-family: inherit; cursor: pointer; }
+  input, select, textarea { font-family: inherit; font-size: inherit; }
+  img, svg { display: block; max-width: 100%; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: var(--radius-full); }
+
+  /* ==========================================================================
+     3. SIDEBAR
+     ========================================================================== */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--color-sidebar-dark);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-5) var(--space-4);
+    z-index: 200;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    padding: 0 var(--space-2) var(--space-5);
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+  .sidebar-brand .brand-sympto { color: #F8FAFC; }
+  .sidebar-brand .brand-track { color: var(--color-primary); }
+
+  .sidebar-search {
+    position: relative;
+    margin-bottom: var(--space-6);
+  }
+  .sidebar-search svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748B;
+    pointer-events: none;
+  }
+  .sidebar-search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #E2E8F0;
+    border-radius: var(--radius-md);
+    padding: 9px 12px 9px 36px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .sidebar-search-input::placeholder { color: #64748B; }
+  .sidebar-search-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-primary);
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .nav-group-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #64748B;
+    text-transform: uppercase;
+    padding: 0 var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+  .nav-group { display: flex; flex-direction: column; gap: 2px; }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px var(--space-2) 9px 10px;
+    border-radius: var(--radius-sm);
+    color: #94A3B8;
+    font-size: 13.5px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-link .nav-icon {
+    width: 18px;
+    text-align: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .nav-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #E2E8F0;
+  }
+  .nav-link.active {
+    background: rgba(8, 145, 178, 0.16);
+    color: #F0F9FF;
+    border-left-color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .sidebar-profile {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: var(--space-3) var(--space-2) var(--space-1);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: var(--space-4);
+  }
+  .sidebar-profile-info { min-width: 0; }
+  .sidebar-profile-name {
+    color: #F1F5F9;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-profile-caption {
+    color: #64748B;
+    font-size: 11.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .avatar-circle {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--gradient-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .avatar-circle-sm { width: 32px; height: 32px; font-size: 12px; }
+
+  /* ==========================================================================
+     4. TOPBAR
+     ========================================================================== */
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--topbar-height);
+    background: var(--color-white);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-6);
+    z-index: 150;
+    gap: var(--space-6);
+  }
+  .topbar-title {
+    font-size: 19px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .topbar-left { flex-shrink: 0; }
+  .topbar-center { flex: 1; display: flex; justify-content: center; }
+  .topbar-search {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+  }
+  .topbar-search svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+  .topbar-search-input {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-md);
+    padding: 8px 12px 8px 36px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .topbar-search-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+    background: var(--color-white);
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-shrink: 0;
+  }
+  .icon-btn {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .icon-btn:hover { background: var(--color-bg-soft); border-color: #CBD5E1; }
+  .notif-dot {
+    position: absolute;
+    top: 6px;
+    right: 7px;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-full);
+    background: var(--color-critical);
+    border: 2px solid var(--color-white);
+  }
+
+  /* ==========================================================================
+     5. MAIN CONTENT
+     ========================================================================== */
+  #main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--topbar-height);
+    height: calc(100vh - var(--topbar-height));
+    overflow-y: auto;
+    padding: var(--space-8);
+    max-width: 1600px;
+    width: calc(100% - var(--sidebar-width));
+  }
+  .screen { display: none; }
+
+  /* ==========================================================================
+     6. PATIENT DETAIL PANEL (slide-in drawer)
+     ========================================================================== */
+  #patient-detail-panel {
+    position: fixed;
+    right: -500px;
+    top: 0;
+    width: 480px;
+    height: 100vh;
+    background: var(--color-white);
+    box-shadow: var(--shadow-panel);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+  .dp-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .dp-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .dp-header p { color: var(--color-text-secondary); font-size: 13px; }
+  .dp-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: var(--color-white);
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .dp-close-btn:hover { background: var(--color-bg-soft); }
+  .dp-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 var(--space-6);
+    gap: var(--space-5);
+    flex-shrink: 0;
+  }
+  .dp-tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .dp-tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+  .dp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-6);
+  }
+  .dp-tab-content { display: none; }
+  .dp-section { margin-bottom: var(--space-6); }
+  .dp-section-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-3);
+  }
+  .dp-vitals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  .dp-vital-tile {
+    background: var(--color-bg-soft);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+  .dp-vital-tile .val {
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .dp-vital-tile .lbl {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+  }
+  .dp-med-item {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .dp-med-item .med-name { font-weight: 700; font-size: 13.5px; }
+  .dp-med-item .med-dose { color: var(--color-text-secondary); font-size: 12.5px; margin-top: 2px; }
+  .dp-med-item .med-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .dp-timeline-item {
+    display: flex;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    position: relative;
+  }
+  .dp-timeline-item .tl-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .dp-timeline-item .tl-title { font-weight: 600; font-size: 13px; }
+  .dp-timeline-item .tl-date { color: var(--color-text-muted); font-size: 11.5px; }
+  .dp-timeline-item .tl-desc { color: var(--color-text-secondary); font-size: 12.5px; margin-top: 3px; }
+
+  #panel-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    z-index: 999;
+    display: none;
+  }
+
+  /* ==========================================================================
+     7. TOAST NOTIFICATIONS
+     ========================================================================== */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 340px;
+  }
+  .toast {
+    background: var(--color-white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-3) var(--space-4);
+    border-left: 4px solid var(--color-primary);
+    font-size: 13px;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .toast.show { opacity: 1; transform: translateX(0); }
+  .toast .toast-icon { font-size: 15px; flex-shrink: 0; }
+  .toast-info { border-left-color: var(--color-primary); }
+  .toast-success { border-left-color: var(--color-success); }
+  .toast-warning { border-left-color: var(--color-warning); }
+  .toast-error { border-left-color: var(--color-critical); }
+
+  /* ==========================================================================
+     8. UTILITY COMPONENTS
+     ========================================================================== */
+  /* Badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+  .badge-green { background: var(--color-success-bg); color: var(--color-success); }
+  .badge-amber { background: var(--color-warning-bg); color: var(--color-warning); }
+  .badge-red   { background: var(--color-critical-bg); color: var(--color-critical); }
+  .badge-blue  { background: var(--color-blue-bg); color: var(--color-blue); }
+  .badge-violet{ background: var(--color-violet-bg); color: var(--color-violet); }
+
+  /* Cards */
+  .data-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-6);
+    border: 1px solid var(--color-border-soft);
+  }
+
+  .stat-tile {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-tile .stat-number {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .stat-tile .stat-label {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+
+  /* Tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-white);
+    font-size: 13px;
+  }
+  .data-table thead th {
+    position: sticky;
+    top: 0;
+    background: var(--color-white);
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--color-border);
+    z-index: 1;
+  }
+  .data-table tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-border-soft);
+    color: var(--color-text);
+  }
+  .data-table tbody tr:hover { background: var(--color-bg-soft); }
+
+  /* Forms */
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-4); }
+  .form-label { font-size: 12.5px; font-weight: 600; color: var(--color-text-secondary); }
+  .form-input, .form-select {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    font-size: 13.5px;
+    background: var(--color-white);
+    color: var(--color-text);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: opacity 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--gradient-primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+  }
+  .btn-primary:hover { opacity: 0.92; }
+  .btn-secondary {
+    background: var(--color-white);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+  .btn-secondary:hover { background: var(--color-bg-soft); }
+  .btn-danger { background: var(--color-critical); color: #fff; }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-ghost { background: transparent; color: var(--color-text-secondary); }
+  .btn-ghost:hover { background: var(--color-bg-soft); }
+
+  /* ==========================================================================
+     9. SCREEN COMPONENTS (Stage 2)
+     ========================================================================== */
+  .control-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+  .control-header .patients-search { flex: 1; max-width: 360px; }
+  .card-header { margin-bottom: var(--space-4); }
+  .card-header h3 { font-size: 15.5px; font-weight: 700; }
+
+  /* Filter chips */
+  .filter-chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .filter-chip {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    border-radius: var(--radius-full);
+    padding: 7px 16px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .filter-chip:hover { background: var(--color-bg-soft); }
+  .filter-chip.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+
+  /* Generic mini progress bar */
+  .bar-track {
+    background: var(--color-border-soft);
+    border-radius: var(--radius-full);
+    height: 6px;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: var(--radius-full); }
+  .bar-green { background: var(--color-success); }
+  .bar-amber { background: var(--color-warning); }
+  .bar-red { background: var(--color-critical); }
+  .bar-blue { background: var(--color-blue); }
+  .mini-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 110px; }
+  .mini-bar-wrap .bar-track { flex: 1; }
+  .mini-bar-label { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); flex-shrink: 0; }
+
+  /* Table row helpers shared across screens */
+  .clickable-row { cursor: pointer; }
+  .row-patient { display: flex; align-items: center; gap: 10px; }
+  .row-patient-name { font-weight: 600; font-size: 13px; }
+  .row-patient-phone { font-size: 11.5px; color: var(--color-text-muted); font-family: var(--font-mono); }
+  .row-actions { display: flex; gap: 4px; }
+  .row-action-btn { padding: 5px 10px; font-size: 12px; font-weight: 600; }
+  .stacked-dates { font-size: 12.5px; }
+  .stacked-dates .muted-date { color: var(--color-text-muted); font-size: 11.5px; margin-top: 2px; }
+  .open-slot-cell { color: var(--color-text-muted); font-style: italic; }
+  .badge-open-slot {
+    background: var(--color-white);
+    color: var(--color-text-muted);
+    border: 1px dashed var(--color-border);
+  }
+
+  /* Welcome banner (Dashboard) */
+  .welcome-banner {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  .welcome-banner-text h2 { color: #fff; font-size: 24px; margin-bottom: 4px; }
+  .welcome-banner-text p { color: rgba(255, 255, 255, 0.85); font-size: 13px; }
+  .welcome-chips { display: flex; gap: var(--space-5); flex-wrap: wrap; }
+  .welcome-chip { text-align: center; min-width: 84px; }
+  .welcome-chip .wc-value { font-family: var(--font-heading); font-weight: 800; font-size: 22px; }
+  .welcome-chip .wc-label { font-size: 11px; color: rgba(255, 255, 255, 0.8); margin-top: 2px; }
+
+  /* KPI grid (Dashboard) */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  .kpi-tile .kpi-number { font-family: var(--font-heading); font-size: 30px; }
+  .kpi-trend { font-size: 11.5px; font-weight: 600; margin: 2px 0 6px; }
+  .kpi-trend.trend-up { color: var(--color-success); }
+  .kpi-trend.trend-down { color: var(--color-critical); }
+
+  /* Split + bottom row layout */
+  .dash-split {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+    align-items: start;
+  }
+  .dash-side { display: flex; flex-direction: column; gap: var(--space-5); }
+  .dash-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--space-5);
+  }
+
+  /* Mini schedule list (Dashboard) */
+  .mini-schedule-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .mini-schedule-row:last-child { border-bottom: none; }
+  .mini-schedule-row.mini-schedule-open { color: var(--color-text-muted); font-style: italic; cursor: default; }
+  .mini-schedule-time { font-family: var(--font-mono); color: var(--color-text-secondary); }
+
+  /* Alerts list (Dashboard + Schedule sidebar) */
+  .alert-row {
+    display: flex;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+  }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-row.alert-critical { border-left-color: var(--color-critical); }
+  .alert-row.alert-warning { border-left-color: var(--color-warning); }
+  .alert-row.alert-info { border-left-color: var(--color-blue); }
+  .alert-icon { font-size: 15px; flex-shrink: 0; }
+  .alert-text { font-size: 12.5px; }
+  .alert-time { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+
+  /* Weekly adherence chart (Dashboard) */
+  .weekly-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 130px;
+    padding-top: 20px;
+  }
+  .week-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .week-bar-value { font-size: 10.5px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .week-bar { width: 60%; border-radius: 4px 4px 0 0; background: var(--color-primary-tint); min-height: 4px; }
+  .week-bar-best { background: var(--color-success); }
+  .week-bar-worst { background: var(--color-critical); }
+  .week-bar-label { font-size: 11px; color: var(--color-text-muted); margin-top: 6px; }
+
+  /* Conditions overview (Dashboard) */
+  .condition-row { margin-bottom: var(--space-3); }
+  .condition-label { font-size: 12.5px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .condition-count { color: var(--color-text-muted); font-family: var(--font-mono); font-size: 11.5px; }
+
+  /* Lab reports inbox (Dashboard) */
+  .lab-report-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    cursor: pointer;
+  }
+  .lab-report-row:last-child { border-bottom: none; }
+  .lab-report-main { flex: 1; min-width: 0; }
+  .lab-report-name { font-size: 12.5px; font-weight: 600; }
+  .lab-report-test { font-size: 11.5px; color: var(--color-text-muted); }
+  .lab-report-date { font-size: 11px; color: var(--color-text-muted); flex-shrink: 0; }
+
+  /* Metric tile grid (Schedule sidebar) */
+  .metric-tile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  /* Multi-step indicator (Add Patient) */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--space-6);
+  }
+  .step-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-soft);
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .step-label { font-size: 11.5px; color: var(--color-text-muted); font-weight: 600; }
+  .step-item.complete .step-circle { background: var(--color-success); color: #fff; }
+  .step-item.complete .step-label { color: var(--color-success); }
+  .step-item.active .step-circle { background: var(--gradient-primary); color: #fff; }
+  .step-item.active .step-label { color: var(--color-primary); }
+  .step-connector { flex: 1; height: 2px; background: var(--color-border); margin: 0 var(--space-3); max-width: 120px; }
+
+  /* Add Patient form */
+  .add-patient-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+  }
+  .input-prefix-group { display: flex; align-items: center; }
+  .input-prefix {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-border);
+    border-right: none;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    padding: 9px 10px;
+    font-size: 13.5px;
+    color: var(--color-text-secondary);
+  }
+  .input-prefix-group .form-input { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .abha-info-box {
+    background: var(--color-blue-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+  }
+  .abha-info-box strong { color: var(--color-text); }
+  .add-patient-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Patient detail panel — Stage 2 tab content */
+  .dp-alert-box { border-radius: var(--radius-md); padding: var(--space-3); font-size: 12.5px; }
+  .dp-alert-box.dp-alert-warning { background: var(--color-warning-bg); color: var(--color-warning); }
+  .dp-alert-box.dp-alert-ok { background: var(--color-success-bg); color: var(--color-success); }
+  .dp-alert-line { padding: 2px 0; }
+  .dp-med-breakdown { margin-top: var(--space-2); }
+  .dp-med-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    padding: 3px 0;
+  }
+  .dp-stat-row { display: flex; gap: var(--space-3); }
+  .dp-stat-row .stat-tile { flex: 1; padding: var(--space-3); }
+  .dp-stat-row .stat-number { font-size: 20px; }
+  .dp-empty-note { color: var(--color-text-muted); font-size: 12.5px; font-style: italic; }
+
+  .dp-trend-chart { display: flex; align-items: flex-end; gap: 6px; height: 120px; padding-top: 22px; }
+  .dp-trend-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .dp-trend-value { font-size: 10.5px; font-weight: 700; color: var(--color-primary); margin-bottom: 4px; }
+  .dp-trend-bar { width: 65%; border-radius: 3px 3px 0 0; background: var(--color-border-soft); min-height: 4px; }
+  .dp-trend-bar-current { background: var(--gradient-primary); }
+  .dp-trend-month { font-size: 10.5px; color: var(--color-text-muted); margin-top: 6px; }
+
+  .dp-timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 36px;
+    bottom: -4px;
+    width: 2px;
+    background: var(--color-border);
+  }
+
+  /* ==========================================================================
+     11. PRESCRIPTION SCREENS (Stage 3)
+     ========================================================================== */
+  .rx-header-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); flex-wrap: wrap; }
+  .rx-title { font-size: 22px; }
+  .rx-patient-select { min-width: 260px; }
+
+  .rx-vitals-strip { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-5); }
+  .rx-vital-chip {
+    background: var(--color-white);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    text-align: center;
+    min-width: 90px;
+    box-shadow: var(--shadow-sm);
+  }
+  .rx-vital-chip-val { display: block; font-family: var(--font-mono); font-weight: 700; font-size: 14px; }
+  .rx-vital-chip-lbl { display: block; font-size: 10.5px; color: var(--color-text-muted); margin-top: 2px; }
+
+  .rx-main-col { display: flex; flex-direction: column; gap: var(--space-5); }
+
+  .rx-demographics { display: flex; gap: var(--space-6); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .rx-demo-item { display: flex; flex-direction: column; gap: 2px; }
+  .rx-demo-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); }
+
+  .rx-allergy-box {
+    background: var(--color-critical-bg);
+    color: var(--color-critical);
+    border: 1px solid var(--color-critical);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: var(--space-2);
+  }
+
+  .rx-card-header-row { display: flex; align-items: center; justify-content: space-between; }
+
+  .rx-add-medicine-form { border-top: 1px solid var(--color-border); margin-top: var(--space-4); padding-top: var(--space-4); }
+  .rx-add-medicine-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+  .timing-toggle-row { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .timing-toggle-chip {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+  .timing-toggle-chip.selected { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+  .rx-add-medicine-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
+
+  .pill-tag-list { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-primary-tint);
+    color: var(--color-primary-dark);
+    border-radius: var(--radius-full);
+    padding: 5px 6px 5px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .pill-remove { background: none; border: none; color: inherit; font-size: 11px; padding: 2px 6px; border-radius: var(--radius-full); }
+  .pill-remove:hover { background: rgba(3, 105, 161, 0.15); }
+  .rx-test-input-row { display: flex; gap: var(--space-2); }
+  .rx-test-input-row .form-input { flex: 1; }
+
+  .rx-action-card { display: flex; flex-direction: column; gap: var(--space-3); }
+  .rx-full-btn { width: 100%; justify-content: center; }
+  .interaction-meta { font-size: 11.5px; color: var(--color-text-muted); margin-top: var(--space-2); }
+
+  .mono-cell { font-family: var(--font-mono); font-size: 12.5px; }
+  .rx-drugs-summary { max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .rx-detail-actionbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+  .rx-detail-actionbar-right { display: flex; align-items: center; gap: var(--space-3); }
+
+  #printable-rx {
+    background: var(--color-white);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-8);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border-soft);
+  }
+  .rx-letterhead {
+    background: var(--gradient-primary);
+    color: #fff;
+    border-radius: var(--radius-md);
+    padding: var(--space-5) var(--space-6);
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-bottom: var(--space-6);
+  }
+  .rx-letterhead-name { font-family: var(--font-heading); font-weight: 800; font-size: 20px; }
+  .rx-letterhead-qual, .rx-letterhead-reg { font-size: 12px; color: rgba(255, 255, 255, 0.85); margin-top: 2px; }
+  .rx-letterhead-clinic { font-size: 11.5px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
+  .rx-letterhead-idbox { text-align: right; flex-shrink: 0; }
+  .rx-letterhead-idbox-id { font-family: var(--font-mono); font-weight: 700; font-size: 15px; }
+  .rx-letterhead-idbox-date { font-size: 11.5px; color: rgba(255, 255, 255, 0.85); margin-top: 2px; }
+  .rx-print-draft-badge { background: var(--color-warning-bg); color: var(--color-warning); display: inline-block; margin-bottom: 6px; }
+
+  .rx-patient-strip {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+  }
+  .rx-strip-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 2px; }
+
+  .rx-print-allergy-box {
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: var(--space-5);
+  }
+  .rx-print-allergy-box.rx-print-allergy-warning { background: var(--color-critical-bg); color: var(--color-critical); border: 1px solid var(--color-critical); }
+  .rx-print-allergy-box.rx-print-allergy-ok { background: var(--color-success-bg); color: var(--color-success); }
+
+  .rx-print-section { margin-bottom: var(--space-5); }
+  .rx-print-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-2);
+  }
+  .rx-print-table tbody tr:hover { background: none; }
+  .rx-print-followup { margin-top: var(--space-2); font-weight: 600; }
+
+  .rx-print-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: var(--space-8);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+  .rx-print-verification { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); }
+  .rx-print-signature { text-align: right; }
+  .rx-print-signature-name { font-family: var(--font-signature); font-size: 30px; color: var(--color-text); }
+  .rx-print-signature-line { border-top: 1px solid var(--color-text); width: 170px; margin: 4px 0 4px auto; }
+  .rx-print-signature-reg { font-size: 11px; color: var(--color-text-muted); }
+
+  /* ==========================================================================
+     12. OPERATIONS SCREENS (Stage 4)
+     ========================================================================== */
+  .lab-reports-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); flex-wrap: wrap; }
+  .lab-reports-header-left { display: flex; align-items: center; gap: var(--space-3); }
+  .lab-reports-header-left h2 { font-size: 22px; }
+
+  .critical-banner {
+    background: var(--color-critical-bg);
+    border: 1px solid var(--color-critical);
+    color: var(--color-critical);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-5);
+    font-weight: 700;
+    font-size: 13.5px;
+    margin-bottom: var(--space-5);
+  }
+
+  .lab-report-card {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border-soft);
+    border-left: 4px solid var(--color-border);
+    padding: var(--space-5);
+    margin-bottom: var(--space-4);
+    transition: border-color 0.15s ease;
+  }
+  .lab-report-card.status-critical { border-left-color: var(--color-critical); }
+  .lab-report-card.status-borderline { border-left-color: var(--color-warning); }
+  .lab-report-card.status-normal { border-left-color: var(--color-success); }
+  .lab-report-card.flagged-urgent { border: 1px solid var(--color-critical); border-left: 4px solid var(--color-critical); box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08); }
+
+  .lab-report-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+  .lab-report-card-title-group { display: flex; gap: var(--space-3); align-items: flex-start; }
+  .lab-report-icon-circle {
+    width: 40px; height: 40px; border-radius: var(--radius-full);
+    background: var(--color-bg-soft); display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .lab-report-title { font-weight: 700; font-size: 14.5px; }
+  .lab-report-subtitle { color: var(--color-text-secondary); font-size: 12.5px; margin-top: 2px; }
+  .lab-report-meta { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); margin-top: 4px; }
+  .lab-report-card-actions { display: flex; gap: var(--space-2); flex-shrink: 0; flex-wrap: wrap; }
+  .reviewed-btn.is-reviewed { color: var(--color-success); background: var(--color-success-bg); }
+
+  .lab-report-params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+  .lab-param-tile { background: var(--color-bg-soft); border-radius: var(--radius-md); padding: var(--space-3); border-left: 3px solid var(--color-border); }
+  .lab-param-tile.param-high, .lab-param-tile.param-critical { border-left-color: var(--color-critical); }
+  .lab-param-tile.param-low, .lab-param-tile.param-borderline { border-left-color: var(--color-warning); }
+  .lab-param-tile.param-normal { border-left-color: var(--color-success); }
+  .lab-param-tile .param-value { font-family: var(--font-mono); font-weight: 700; font-size: 15px; }
+  .lab-param-tile .param-name { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .lab-param-tile .param-range { font-size: 10px; color: var(--color-text-muted); margin-top: 2px; }
+  .lab-report-card-footer { display: flex; gap: var(--space-2); flex-wrap: wrap; border-top: 1px solid var(--color-border-soft); padding-top: var(--space-4); }
+
+  /* Messages */
+  .messages-layout { display: flex; gap: var(--space-5); height: calc(100vh - var(--topbar-height) - var(--space-8) * 2); }
+  .conversations-pane {
+    width: 320px; flex-shrink: 0; background: var(--color-white); border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-soft); box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .conversations-search { padding: var(--space-4); border-bottom: 1px solid var(--color-border-soft); }
+  .conversation-list { flex: 1; overflow-y: auto; }
+  .conversation-item {
+    display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border-soft); cursor: pointer;
+  }
+  .conversation-item:hover { background: var(--color-bg-soft); }
+  .conversation-item.active { background: var(--color-primary-tint); }
+  .conversation-item-body { flex: 1; min-width: 0; }
+  .conversation-item-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+  .conversation-item-name { font-weight: 600; font-size: 13.5px; }
+  .conversation-item-time { font-family: var(--font-mono); font-size: 10.5px; color: var(--color-text-muted); flex-shrink: 0; }
+  .conversation-item-preview { font-size: 12px; color: var(--color-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+  .conversation-unread-badge {
+    background: var(--color-primary); color: #fff; border-radius: var(--radius-full);
+    font-size: 10.5px; font-weight: 700; padding: 1px 7px; flex-shrink: 0;
+  }
+
+  .chat-pane { flex: 1; display: flex; flex-direction: column; background: var(--color-white); border-radius: var(--radius-lg); border: 1px solid var(--color-border-soft); box-shadow: var(--shadow-sm); overflow: hidden; min-width: 0; }
+  .chat-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border-soft); gap: var(--space-3); flex-wrap: wrap; }
+  .chat-header-info { display: flex; align-items: center; gap: var(--space-3); }
+  .chat-header-name-row { display: flex; align-items: center; gap: 6px; }
+  .online-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-success); }
+  .online-dot.offline { background: var(--color-text-muted); }
+  .chat-header-condition { font-size: 12px; color: var(--color-text-secondary); }
+  .chat-banner { background: var(--color-warning-bg); color: var(--color-warning); padding: var(--space-3) var(--space-5); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+  .chat-thread { flex: 1; overflow-y: auto; padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-3); }
+  .chat-bubble { max-width: 68%; padding: var(--space-3) var(--space-4); border-radius: var(--radius-lg); font-size: 13px; }
+  .chat-bubble.incoming { align-self: flex-start; background: var(--color-bg-soft); color: var(--color-text); border-bottom-left-radius: 4px; }
+  .chat-bubble.outgoing { align-self: flex-end; background: var(--gradient-primary); color: #fff; border-bottom-right-radius: 4px; }
+  .chat-bubble-time { font-family: var(--font-mono); font-size: 10px; margin-top: 5px; opacity: 0.7; display: flex; gap: 4px; align-items: center; }
+  .chat-bubble.incoming .chat-bubble-time { color: var(--color-text-muted); }
+  .chat-input-dock { display: flex; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-top: 1px solid var(--color-border-soft); align-items: flex-end; }
+  .chat-input-dock textarea { flex: 1; resize: none; }
+
+  /* Notifications */
+  .notif-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-5); flex-wrap: wrap; }
+  .notif-feed { display: flex; flex-direction: column; gap: var(--space-3); }
+  .notif-item { display: flex; gap: var(--space-3); align-items: flex-start; background: var(--color-white); border: 1px solid var(--color-border-soft); border-radius: var(--radius-lg); padding: var(--space-4); cursor: pointer; }
+  .notif-item.unread { background: var(--color-primary-tint); border-color: rgba(8, 145, 178, 0.25); }
+  .notif-icon-circle { width: 38px; height: 38px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .notif-icon-circle.type-critical { background: var(--color-critical-bg); }
+  .notif-icon-circle.type-warning { background: var(--color-warning-bg); }
+  .notif-icon-circle.type-info { background: var(--color-blue-bg); }
+  .notif-body { flex: 1; min-width: 0; }
+  .notif-top-row { display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline; flex-wrap: wrap; }
+  .notif-title { font-weight: 700; font-size: 13.5px; }
+  .notif-desc { font-size: 12.5px; color: var(--color-text-secondary); margin-top: 3px; }
+  .notif-time { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); white-space: nowrap; }
+
+  /* Profile & Settings */
+  .profile-hero {
+    background: var(--gradient-primary); color: #fff; border-radius: var(--radius-lg);
+    padding: var(--space-6); display: flex; gap: var(--space-5); align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap;
+  }
+  .profile-hero-avatar {
+    width: 88px; height: 88px; border-radius: var(--radius-full); background: rgba(255, 255, 255, 0.18);
+    display: flex; align-items: center; justify-content: center; font-family: var(--font-heading);
+    font-weight: 800; font-size: 32px; flex-shrink: 0; border: 2px solid rgba(255, 255, 255, 0.4);
+  }
+  .profile-hero-info h2 { font-size: 24px; color: #fff; }
+  .profile-hero-quals { font-size: 13px; color: rgba(255, 255, 255, 0.85); margin-top: 2px; }
+  .profile-hero-clinic { font-size: 12.5px; color: rgba(255, 255, 255, 0.75); margin-top: 4px; }
+  .profile-hero-badges { display: flex; gap: var(--space-2); margin-top: var(--space-3); flex-wrap: wrap; }
+  .profile-verify-badge { background: rgba(255, 255, 255, 0.18); color: #fff; border-radius: var(--radius-full); padding: 3px 12px; font-size: 11.5px; font-weight: 600; }
+
+  .profile-stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+  .profile-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-5); align-items: start; }
+
+  .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--color-border-soft); gap: var(--space-3); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-row-label { font-size: 13px; font-weight: 600; }
+  .toggle-switch {
+    width: 42px; height: 24px; border-radius: var(--radius-full); background: #CBD5E1;
+    position: relative; flex-shrink: 0; transition: background 0.15s ease;
+  }
+  .toggle-switch .toggle-knob {
+    position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: var(--radius-full);
+    background: #fff; box-shadow: var(--shadow-sm); transition: transform 0.15s ease;
+  }
+  .toggle-switch.on { background: var(--color-primary); }
+  .toggle-switch.on .toggle-knob { transform: translateX(18px); }
+
+  .plan-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-4); margin-bottom: var(--space-4); }
+  .plan-card-name { font-weight: 700; font-size: 14.5px; }
+  .plan-card-renewal { font-size: 12px; color: var(--color-text-secondary); margin-top: 4px; }
+  .plan-feature-list { margin-top: var(--space-3); display: flex; flex-direction: column; gap: 6px; }
+  .plan-feature-item { font-size: 12.5px; color: var(--color-text-secondary); display: flex; gap: 6px; }
+  .plan-feature-item .feature-check { color: var(--color-success); }
+
+  /* ==========================================================================
+     13. PRINT ARCHITECTURE
+     ========================================================================== */
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+  @media print {
+    html, body {
+      background: #fff !important;
+      height: auto;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .sidebar, .topbar, #patient-detail-panel, #panel-backdrop, #toast-container, .no-print {
+      display: none !important;
+    }
+    #main-content {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    .screen { display: none !important; }
+    #screen-prescription-detail {
+      display: block !important;
+      box-shadow: none !important;
+      border: none !important;
+      width: 190mm !important;
+      margin: 0 auto !important;
+    }
+    #printable-rx {
+      box-shadow: none !important;
+      border: none !important;
+      width: 100% !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .rx-letterhead { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    * { box-shadow: none !important; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============================== SIDEBAR ============================== -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-sympto">Sympto</span><span class="brand-track">Track</span>
+    </div>
+
+    <div class="sidebar-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" class="sidebar-search-input" placeholder="Search patients, records...">
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-title">Overview</div>
+        <a href="#" class="nav-link" data-screen="dashboard"><span class="nav-icon">&#8962;</span><span>Dashboard</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title">Patient Care</div>
+        <a href="#" class="nav-link" data-screen="patients"><span class="nav-icon">&#128101;</span><span>Patients</span></a>
+        <a href="#" class="nav-link" data-screen="schedule"><span class="nav-icon">&#128197;</span><span>Schedule</span></a>
+        <a href="#" class="nav-link" data-screen="rx-history"><span class="nav-icon">&#128138;</span><span>Prescriptions</span></a>
+        <a href="#" class="nav-link" data-screen="messages"><span class="nav-icon">&#9993;</span><span>Messages</span></a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title">Practice</div>
+        <a href="#" class="nav-link" data-screen="lab-reports"><span class="nav-icon">&#128202;</span><span>Lab Reports</span></a>
+        <a href="#" class="nav-link" data-screen="profile"><span class="nav-icon">&#9881;</span><span>Settings</span></a>
+      </div>
+    </nav>
+
+    <div class="sidebar-profile">
+      <div class="avatar-circle" id="sidebar-doctor-avatar">RS</div>
+      <div class="sidebar-profile-info">
+        <div class="sidebar-profile-name" id="sidebar-doctor-name">Dr. Rajesh Sharma</div>
+        <div class="sidebar-profile-caption" id="sidebar-doctor-caption">Apex Health Clinic · Premium Tier</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================== TOPBAR ============================== -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="topbar-title" id="topbar-title">Dashboard</h1>
+    </div>
+    <div class="topbar-center">
+      <div class="topbar-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" class="topbar-search-input" id="global-search-input" placeholder="Search patients, prescriptions, reports...">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary no-print" id="btn-new-prescription">+ New Prescription</button>
+      <button class="icon-btn no-print" id="topbar-notification" title="Notifications" aria-label="Notifications">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        <span class="notif-dot" id="topbar-notification-dot"></span>
+      </button>
+      <button class="icon-btn no-print" id="topbar-messages" title="Messages" aria-label="Messages">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span class="notif-dot" id="topbar-messages-dot"></span>
+      </button>
+      <div class="avatar-circle avatar-circle-sm" id="topbar-avatar" style="cursor:pointer;" title="My Profile &amp; Settings">RS</div>
+    </div>
+  </header>
+
+  <!-- ============================== MAIN CONTENT ============================== -->
+  <main id="main-content">
+    <!-- ============================== SCREEN: DASHBOARD ============================== -->
+    <div id="screen-dashboard" class="screen">
+      <div class="welcome-banner">
+        <div class="welcome-banner-text">
+          <h2 id="dash-greeting">Good morning, Dr. Rajesh Sharma</h2>
+          <p id="dash-date-clinic">—</p>
+        </div>
+        <div class="welcome-chips">
+          <div class="welcome-chip"><div class="wc-value" id="dash-chip-adherence">—</div><div class="wc-label">Today's Adherence</div></div>
+          <div class="welcome-chip"><div class="wc-value" id="dash-chip-active">—</div><div class="wc-label">Active Patients</div></div>
+          <div class="welcome-chip"><div class="wc-value" id="dash-chip-rx">—</div><div class="wc-label">Rx Written Today</div></div>
+          <div class="welcome-chip"><div class="wc-value" id="dash-chip-pending">—</div><div class="wc-label">Pending Reports</div></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="dash-kpi-grid"></div>
+
+      <div class="dash-split">
+        <div class="data-card">
+          <div class="card-header"><h3>Today's Priority Follow-ups</h3></div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Patient</th><th>Condition</th><th>Adherence</th><th>Last Visit</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="dash-priority-body"></tbody>
+          </table>
+        </div>
+        <div class="dash-side">
+          <div class="data-card">
+            <div class="card-header"><h3>Today's Schedule</h3></div>
+            <div id="dash-schedule-list"></div>
+          </div>
+          <div class="data-card">
+            <div class="card-header"><h3>Recent Alerts</h3></div>
+            <div id="dash-alerts-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-bottom-row">
+        <div class="data-card">
+          <div class="card-header"><h3>Weekly Adherence</h3></div>
+          <div class="weekly-chart" id="dash-weekly-chart"></div>
+        </div>
+        <div class="data-card">
+          <div class="card-header"><h3>Conditions Overview</h3></div>
+          <div id="dash-conditions-list"></div>
+        </div>
+        <div class="data-card">
+          <div class="card-header"><h3>Lab Reports Inbox</h3></div>
+          <div id="dash-labreports-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: SCHEDULE ============================== -->
+    <div id="screen-schedule" class="screen">
+      <div class="control-header">
+        <div class="filter-chips" id="schedule-filter-chips">
+          <button class="filter-chip active" data-range="today">Today</button>
+          <button class="filter-chip" data-range="tomorrow">Tomorrow</button>
+          <button class="filter-chip" data-range="week">This Week</button>
+          <button class="filter-chip" data-range="all">All</button>
+        </div>
+        <button class="btn btn-primary" id="btn-add-appointment" style="margin-left:auto;">+ Add Appointment</button>
+      </div>
+
+      <div class="dash-split">
+        <div class="data-card">
+          <table class="data-table">
+            <thead>
+              <tr><th>Time</th><th>Patient</th><th>Type</th><th>Notes</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="schedule-table-body"></tbody>
+          </table>
+        </div>
+        <div class="dash-side">
+          <div class="metric-tile-grid" id="schedule-metric-grid"></div>
+          <div class="data-card">
+            <div class="card-header"><h3>Recent Notifications</h3></div>
+            <div id="schedule-notifications-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: PATIENTS ============================== -->
+    <div id="screen-patients" class="screen">
+      <div class="control-header">
+        <div class="topbar-search patients-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="text" class="topbar-search-input" id="patients-search-input" placeholder="Search by name or phone...">
+        </div>
+        <div class="filter-chips" id="patients-filter-chips">
+          <button class="filter-chip active" data-status="All">All</button>
+          <button class="filter-chip" data-status="Follow-up Due">Follow-up Due</button>
+          <button class="filter-chip" data-status="Report Pending">Report Pending</button>
+          <button class="filter-chip" data-status="Missed Dose">Missed Dose</button>
+          <button class="filter-chip" data-status="Critical">Critical</button>
+        </div>
+        <button class="btn btn-primary" style="margin-left:auto;" onclick="go('add-patient')">+ Add Patient</button>
+      </div>
+      <div class="data-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Patient</th><th>Age / Gender</th><th>Condition</th><th>Adherence</th><th>Last Rx / Next Visit</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="patients-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: ADD PATIENT ============================== -->
+    <div id="screen-add-patient" class="screen">
+      <div class="step-indicator">
+        <div class="step-item complete"><div class="step-circle">✓</div><div class="step-label">Basic Info</div></div>
+        <div class="step-connector"></div>
+        <div class="step-item active"><div class="step-circle">2</div><div class="step-label">Medical Details</div></div>
+        <div class="step-connector"></div>
+        <div class="step-item"><div class="step-circle">3</div><div class="step-label">Confirmation</div></div>
+      </div>
+
+      <div class="data-card">
+        <div class="add-patient-grid">
+          <div class="add-patient-col">
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="add-first-name"></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="add-last-name"></div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number</label>
+              <div class="input-prefix-group"><span class="input-prefix">+91</span><input class="form-input" id="add-mobile" maxlength="10" placeholder="10-digit number"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Age</label><input type="number" class="form-input" id="add-age"></div>
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <select class="form-select" id="add-gender"><option>Male</option><option>Female</option><option>Other</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Blood Group</label>
+              <select class="form-select" id="add-blood-group">
+                <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Height (cm)</label><input type="number" class="form-input" id="add-height"></div>
+            <div class="form-group"><label class="form-label">Weight (kg)</label><input type="number" class="form-input" id="add-weight"></div>
+            <div class="form-group"><label class="form-label">Emergency Contact Number</label><input class="form-input" id="add-emergency-contact"></div>
+          </div>
+          <div class="add-patient-col">
+            <div class="form-group"><label class="form-label">Known Allergies</label><textarea class="form-input" id="add-allergies" rows="2" placeholder="Comma-separated, e.g. Penicillin, Sulfa drugs"></textarea></div>
+            <div class="form-group"><label class="form-label">Chronic Conditions</label><textarea class="form-input" id="add-conditions" rows="2" placeholder="e.g. Type 2 Diabetes"></textarea></div>
+            <div class="form-group"><label class="form-label">Current Medications</label><textarea class="form-input" id="add-medications" rows="3" placeholder="One medicine per line"></textarea></div>
+            <div class="form-group"><label class="form-label">ABHA ID</label><input class="form-input" id="add-abha" placeholder="14-digit ABHA number"></div>
+            <div class="abha-info-box">
+              <strong>What is ABHA?</strong> ABHA (Ayushman Bharat Health Account) links this patient's records to India's national digital health ecosystem (ABDM), enabling secure, consent-based access to their health history across providers.
+            </div>
+          </div>
+        </div>
+        <div class="add-patient-actions">
+          <button class="btn btn-ghost" onclick="go('patients')">Cancel</button>
+          <button class="btn btn-secondary" id="btn-save-return">Save &amp; Return</button>
+          <button class="btn btn-primary" id="btn-add-write-rx">Add Patient &amp; Write First Rx</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: WRITE PRESCRIPTION ============================== -->
+    <div id="screen-write-rx" class="screen">
+      <div class="rx-header-row">
+        <h2 class="rx-title">Write Prescription</h2>
+        <select class="form-select rx-patient-select" id="rx-patient-select"></select>
+      </div>
+      <div class="rx-vitals-strip" id="rx-vitals-strip"></div>
+
+      <div class="dash-split">
+        <div class="rx-main-col">
+          <div class="data-card">
+            <div class="card-header"><h3>Patient &amp; Diagnosis</h3></div>
+            <div class="rx-demographics" id="rx-patient-demographics"></div>
+            <div id="rx-allergy-alert"></div>
+            <div class="form-group" style="margin-top: var(--space-4);">
+              <label class="form-label">Chief Complaint</label>
+              <textarea class="form-input" id="rx-chief-complaint" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Diagnosis (ICD-10)</label>
+              <input class="form-input" id="rx-diagnosis" list="icd10-datalist" placeholder="Search ICD-10 diagnosis...">
+              <datalist id="icd10-datalist">
+                <option value="E11.9 - Type 2 Diabetes Mellitus, without complications">
+                <option value="I10 - Essential (Primary) Hypertension">
+                <option value="E03.9 - Hypothyroidism, unspecified">
+                <option value="E28.2 - Polycystic Ovarian Syndrome">
+                <option value="I25.10 - Coronary Artery Disease">
+                <option value="J45.909 - Bronchial Asthma, unspecified">
+                <option value="N18.3 - Chronic Kidney Disease, Stage 3">
+                <option value="E66.9 - Obesity, unspecified">
+                <option value="M54.5 - Low Back Pain">
+                <option value="J06.9 - Acute Upper Respiratory Infection">
+                <option value="K21.9 - Gastro-Esophageal Reflux Disease">
+                <option value="R51 - Headache">
+                <option value="E78.5 - Dyslipidemia, unspecified">
+                <option value="N39.0 - Urinary Tract Infection">
+                <option value="L23.9 - Allergic Contact Dermatitis">
+              </datalist>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="rx-card-header-row card-header">
+              <h3>Medicines</h3>
+              <button class="btn btn-secondary" id="btn-toggle-add-medicine" type="button">+ Add Medicine</button>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr><th>Drug Name &amp; Class</th><th>Dose</th><th>Frequency</th><th>Timing</th><th>Duration</th><th>Notes</th><th></th></tr>
+              </thead>
+              <tbody id="rx-medicines-body"></tbody>
+            </table>
+
+            <div class="rx-add-medicine-form" id="rx-add-medicine-form" style="display:none;">
+              <div class="rx-add-medicine-grid">
+                <div class="form-group"><label class="form-label">Drug Name</label><input class="form-input" id="rx-med-name" list="drug-name-datalist"></div>
+                <div class="form-group"><label class="form-label">Dose</label><input class="form-input" id="rx-med-dose" placeholder="e.g. 500mg"></div>
+                <div class="form-group">
+                  <label class="form-label">Frequency</label>
+                  <select class="form-select" id="rx-med-frequency">
+                    <option>Once daily</option><option>Twice daily</option><option>Thrice daily</option><option>Once weekly</option><option>As needed (SOS)</option>
+                  </select>
+                </div>
+                <div class="form-group"><label class="form-label">Duration</label><input class="form-input" id="rx-med-duration" placeholder="e.g. 30 days"></div>
+              </div>
+              <datalist id="drug-name-datalist">
+                <option value="Metformin"><option value="Glimepiride"><option value="Atorvastatin">
+                <option value="Amlodipine"><option value="Telmisartan"><option value="Losartan">
+                <option value="Levothyroxine"><option value="Montelukast"><option value="Azithromycin">
+                <option value="Paracetamol"><option value="Pantoprazole"><option value="Cetirizine">
+              </datalist>
+              <div class="form-group">
+                <label class="form-label">Timing</label>
+                <div class="timing-toggle-row">
+                  <button type="button" class="timing-toggle-chip" data-timing="Morning">🌅 Morning</button>
+                  <button type="button" class="timing-toggle-chip" data-timing="Night">🌙 Night</button>
+                  <button type="button" class="timing-toggle-chip" data-timing="After Food">🍽️ After Food</button>
+                  <button type="button" class="timing-toggle-chip" data-timing="Before Food">⏳ Before Food</button>
+                </div>
+              </div>
+              <div class="form-group"><label class="form-label">Notes (optional)</label><input class="form-input" id="rx-med-notes" placeholder="e.g. Take with plenty of water"></div>
+              <div class="rx-add-medicine-actions">
+                <button class="btn btn-ghost" type="button" id="btn-cancel-medicine">Cancel</button>
+                <button class="btn btn-primary" type="button" id="btn-submit-medicine">Add to Prescription</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="data-card">
+            <div class="card-header"><h3>Ordered Tests &amp; Instructions</h3></div>
+            <div class="form-group">
+              <label class="form-label">Lab Tests / Diagnostics</label>
+              <div class="pill-tag-list" id="rx-tests-list"></div>
+              <div class="rx-test-input-row">
+                <input class="form-input" id="rx-test-input" placeholder="Add a custom test and press Enter">
+                <button class="btn btn-secondary" type="button" id="btn-add-test">Add</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Follow-up Date</label>
+              <input type="date" class="form-input" id="rx-followup-date" style="max-width: 220px;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Special Instructions / Dietary Advice</label>
+              <textarea class="form-input" id="rx-instructions" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-side">
+          <div class="data-card" id="rx-interaction-check"></div>
+          <div class="data-card rx-action-card">
+            <button class="btn btn-primary rx-full-btn" type="button" id="btn-sign-send-rx">Sign &amp; Send Rx</button>
+            <button class="btn btn-secondary rx-full-btn" type="button" id="btn-print-draft-rx">Print / Download PDF</button>
+            <button class="btn btn-ghost rx-full-btn" type="button" id="btn-save-draft-rx">Save Draft</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: PRESCRIPTION HISTORY ============================== -->
+    <div id="screen-rx-history" class="screen">
+      <div class="control-header">
+        <div class="filter-chips" id="rx-history-filter-chips">
+          <button class="filter-chip active" data-status="All">All Patients</button>
+          <button class="filter-chip" data-status="Active">Active Rx</button>
+          <button class="filter-chip" data-status="Completed">Completed</button>
+          <button class="filter-chip" data-status="Expiring Soon">Expiring Soon</button>
+        </div>
+        <div class="topbar-search patients-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <input type="text" class="topbar-search-input" id="rx-history-search-input" placeholder="Search by Rx ID or patient...">
+        </div>
+        <button class="btn btn-primary" id="btn-write-new-rx" style="margin-left:auto;">+ Write New Rx</button>
+      </div>
+      <div class="data-card">
+        <table class="data-table">
+          <thead>
+            <tr><th>Rx ID</th><th>Patient</th><th>Diagnosis</th><th>Drugs</th><th>Issue Date</th><th>Validity</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="rx-history-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: PRESCRIPTION DETAIL ============================== -->
+    <div id="screen-prescription-detail" class="screen">
+      <div class="rx-detail-actionbar no-print">
+        <button class="btn btn-ghost" onclick="go('rx-history')">← Back to History</button>
+        <div class="rx-detail-actionbar-right">
+          <span class="badge badge-green">✓ Verified Digital Signature</span>
+          <button class="btn btn-secondary" onclick="toast('Prescription link sent via WhatsApp', 'success')">Share via WhatsApp</button>
+          <button class="btn btn-primary" onclick="window.print()">Print / Download PDF</button>
+        </div>
+      </div>
+
+      <div id="printable-rx">
+        <div class="rx-letterhead">
+          <div>
+            <div class="rx-letterhead-name" id="rx-print-doctor-name">—</div>
+            <div class="rx-letterhead-qual" id="rx-print-doctor-qual">—</div>
+            <div class="rx-letterhead-reg" id="rx-print-doctor-reg">—</div>
+            <div class="rx-letterhead-clinic" id="rx-print-clinic-address">—</div>
+            <div class="rx-letterhead-clinic" id="rx-print-clinic-contact">—</div>
+          </div>
+          <div class="rx-letterhead-idbox">
+            <span class="badge rx-print-draft-badge" id="rx-print-draft-badge" style="display:none;">DRAFT</span>
+            <div class="rx-letterhead-idbox-id" id="rx-print-rx-id">—</div>
+            <div class="rx-letterhead-idbox-date" id="rx-print-date">—</div>
+          </div>
+        </div>
+
+        <div class="rx-patient-strip">
+          <div><span class="rx-strip-label">Patient</span><span id="rx-print-patient-name">—</span></div>
+          <div><span class="rx-strip-label">Age / Gender</span><span id="rx-print-patient-age-gender">—</span></div>
+          <div><span class="rx-strip-label">Weight</span><span id="rx-print-patient-weight">—</span></div>
+          <div><span class="rx-strip-label">BP</span><span id="rx-print-patient-bp">—</span></div>
+          <div><span class="rx-strip-label">Consultation Date</span><span id="rx-print-consult-date">—</span></div>
+        </div>
+
+        <div class="rx-print-allergy-box" id="rx-print-allergy-box">—</div>
+
+        <div class="rx-print-section">
+          <div class="rx-print-section-title">Chief Complaint</div>
+          <p id="rx-print-complaint">—</p>
+          <div class="rx-print-section-title" style="margin-top:10px;">Diagnosis (ICD-10)</div>
+          <p id="rx-print-diagnosis">—</p>
+        </div>
+
+        <div class="rx-print-section">
+          <div class="rx-print-section-title">Rx / Medicines</div>
+          <table class="data-table rx-print-table">
+            <thead><tr><th>Drug</th><th>Dose</th><th>Frequency</th><th>Timing</th><th>Duration</th><th>Notes</th></tr></thead>
+            <tbody id="rx-print-medicines-body"></tbody>
+          </table>
+        </div>
+
+        <div class="rx-print-section">
+          <div class="rx-print-section-title">Recommended Lab Tests &amp; Diagnostics</div>
+          <p id="rx-print-tests">—</p>
+        </div>
+
+        <div class="rx-print-section">
+          <div class="rx-print-section-title">Doctor's Notes &amp; Advice</div>
+          <p id="rx-print-instructions">—</p>
+          <p id="rx-print-followup" class="rx-print-followup">—</p>
+        </div>
+
+        <div class="rx-print-footer">
+          <div class="rx-print-verification" id="rx-print-verification">—</div>
+          <div class="rx-print-signature">
+            <div class="rx-print-signature-name" id="rx-print-signature-name">—</div>
+            <div class="rx-print-signature-line"></div>
+            <div class="rx-print-signature-reg" id="rx-print-signature-reg">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: LAB REPORTS INBOX ============================== -->
+    <div id="screen-lab-reports" class="screen">
+      <div class="lab-reports-header">
+        <div class="lab-reports-header-left">
+          <h2>Lab Reports Inbox</h2>
+          <span class="badge badge-red" id="lab-unreviewed-badge">0 Unreviewed</span>
+        </div>
+        <div class="filter-chips" id="lab-reports-filter-chips">
+          <button class="filter-chip active" data-filter="Unreviewed">Unreviewed</button>
+          <button class="filter-chip" data-filter="Critical">Critical</button>
+          <button class="filter-chip" data-filter="Normal">Normal</button>
+          <button class="filter-chip" data-filter="All">All</button>
+        </div>
+      </div>
+
+      <div class="critical-banner" id="lab-critical-banner" style="display:none;"></div>
+
+      <div id="lab-reports-list"></div>
+    </div>
+
+    <!-- ============================== SCREEN: MESSAGES ============================== -->
+    <div id="screen-messages" class="screen">
+      <div class="messages-layout">
+        <div class="conversations-pane">
+          <div class="conversations-search">
+            <input type="text" class="form-input" id="conversations-search-input" placeholder="Search conversations...">
+          </div>
+          <div class="conversation-list" id="conversation-list"></div>
+        </div>
+        <div class="chat-pane">
+          <div class="chat-header">
+            <div class="chat-header-info">
+              <div class="avatar-circle" id="chat-header-avatar">—</div>
+              <div>
+                <div class="chat-header-name-row">
+                  <strong id="chat-header-name">Select a conversation</strong>
+                  <span class="online-dot offline" id="chat-header-online-dot"></span>
+                </div>
+                <div class="chat-header-condition" id="chat-header-condition"></div>
+              </div>
+            </div>
+            <div class="row-actions">
+              <button class="btn btn-secondary" id="btn-chat-write-rx">Write Rx</button>
+              <button class="btn btn-ghost" id="btn-chat-view-profile">View Profile</button>
+            </div>
+          </div>
+          <div class="chat-banner no-print" id="chat-lab-banner" style="display:none;"></div>
+          <div class="chat-thread" id="chat-thread"></div>
+          <div class="chat-input-dock">
+            <textarea class="form-input" id="chat-message-input" rows="2" placeholder="Type a message..."></textarea>
+            <button class="btn btn-primary" id="btn-send-message">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================== SCREEN: NOTIFICATIONS ============================== -->
+    <div id="screen-notifications" class="screen">
+      <div class="notif-toolbar">
+        <div class="filter-chips" id="notif-filter-chips">
+          <button class="filter-chip active" data-filter="All">All</button>
+          <button class="filter-chip" data-filter="Critical">Critical</button>
+          <button class="filter-chip" data-filter="lab">Lab Reports</button>
+          <button class="filter-chip" data-filter="missed-dose">Missed Dose</button>
+          <button class="filter-chip" data-filter="message">Messages</button>
+        </div>
+        <button class="btn btn-secondary" id="btn-mark-all-read">Mark All Read</button>
+      </div>
+      <div class="notif-feed" id="notif-feed"></div>
+    </div>
+
+    <!-- ============================== SCREEN: PROFILE & SETTINGS ============================== -->
+    <div id="screen-profile" class="screen">
+      <div class="profile-hero">
+        <div class="profile-hero-avatar" id="profile-hero-avatar">RS</div>
+        <div class="profile-hero-info">
+          <h2 id="profile-hero-name">Dr. Rajesh Sharma</h2>
+          <div class="profile-hero-quals" id="profile-hero-quals"></div>
+          <div class="profile-hero-clinic" id="profile-hero-clinic"></div>
+          <div class="profile-hero-badges">
+            <span class="profile-verify-badge">✓ MCI Verified</span>
+            <span class="profile-verify-badge" id="profile-hero-tier"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-stats-row" id="profile-stats-row"></div>
+
+      <div class="profile-columns">
+        <div class="data-card">
+          <div class="card-header"><h3>Clinic &amp; Practice Info</h3></div>
+          <div class="form-group"><label class="form-label">Clinic Name</label><input class="form-input" id="profile-clinic-name"></div>
+          <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="profile-clinic-address"></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="profile-clinic-phone"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-clinic-email"></div>
+          <div class="form-group"><label class="form-label">Operating Hours</label><input class="form-input" id="profile-clinic-hours"></div>
+          <button class="btn btn-primary" id="btn-save-profile" style="width:100%;">Save Changes</button>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header"><h3>Alerts &amp; Notification Settings</h3></div>
+          <div id="profile-toggle-list"></div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header"><h3>Subscription &amp; Account</h3></div>
+          <div class="plan-card" id="profile-plan-card"></div>
+          <button class="btn btn-danger" id="btn-logout" style="width:100%;">Log Out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================== PATIENT DETAIL PANEL ============================== -->
+  <div id="patient-detail-panel" class="no-print">
+    <div class="dp-header">
+      <div>
+        <h2 id="dp-patient-name">Patient Name</h2>
+        <p id="dp-patient-meta">Age, Gender · Condition</p>
+      </div>
+      <button class="dp-close-btn" onclick="closeDetail()" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+    <div class="dp-tabs">
+      <button class="dp-tab-btn active" onclick="dpTab(this, 'overview')">Overview</button>
+      <button class="dp-tab-btn" onclick="dpTab(this, 'vitals')">Vitals</button>
+      <button class="dp-tab-btn" onclick="dpTab(this, 'medicines')">Medicines</button>
+      <button class="dp-tab-btn" onclick="dpTab(this, 'timeline')">Timeline</button>
+    </div>
+    <div class="dp-body">
+      <div id="dp-tab-overview" class="dp-tab-content" style="display:block;"></div>
+      <div id="dp-tab-vitals" class="dp-tab-content" style="display:none;"></div>
+      <div id="dp-tab-medicines" class="dp-tab-content" style="display:none;"></div>
+      <div id="dp-tab-timeline" class="dp-tab-content" style="display:none;"></div>
+    </div>
+  </div>
+  <div id="panel-backdrop" class="no-print"></div>
+
+  <!-- ============================== TOAST CONTAINER ============================== -->
+  <div id="toast-container" class="no-print"></div>
+
+<script>
+  /* ==========================================================================
+     CENTRAL DATA STORE
+     ========================================================================== */
+  window.appState = {
+    currentScreen: 'dashboard',
+    doctor: {
+      name: "Dr. Rajesh Sharma",
+      license: "MCI-88492",
+      clinic: "Apex Health Clinic, Mumbai",
+      tier: "Premium Tier",
+      qualifications: "MBBS, MD (Internal Medicine)",
+      address: "204, Turner Road, Bandra West, Mumbai - 400050",
+      contact: "+91 22 4012 5678 · care@apexhealthclinic.in",
+      phone: "+91 22 4012 5678",
+      email: "care@apexhealthclinic.in",
+      operatingHours: "Mon - Sat, 10:00 AM - 7:00 PM",
+      rating: 4.9,
+      experienceYears: 14
+    },
+    patients: [
+      {
+        id: 1,
+        name: "Ramesh Kumar Patil",
+        age: 58,
+        gender: "Male",
+        phone: "+91 9821345678",
+        condition: "Type 2 Diabetes",
+        adherence: 82,
+        lastVisit: "2026-07-10",
+        nextVisit: "2026-08-10",
+        status: "Active",
+        vitals: { fbs: "142 mg/dL", bp: "130/85 mmHg", hba1c: "7.2%", bmi: "27.4", weight: "78 kg", spo2: "97%" },
+        allergies: ["Penicillin"],
+        medicines: [
+          { name: "Metformin", dose: "500mg", frequency: "Twice daily", timing: ["Morning", "After Food"], adherence: 85 },
+          { name: "Glimepiride", dose: "1mg", frequency: "Once daily", timing: ["Morning", "Before Food"], adherence: 80 },
+          { name: "Atorvastatin", dose: "10mg", frequency: "Once daily", timing: ["Night", "After Food"], adherence: 82 }
+        ],
+        timeline: [
+          { date: "2026-07-10", title: "Consultation", icon: "🩺", description: "Routine follow-up, HbA1c reviewed, dosage adjusted." },
+          { date: "2026-06-04", title: "Lab Report", icon: "🧪", description: "Fasting blood sugar 148 mg/dL, lipid panel ordered." },
+          { date: "2026-04-27", title: "Prescription Renewed", icon: "💊", description: "Metformin and Glimepiride renewed for 60 days." },
+          { date: "2026-03-26", title: "Diet Counselling", icon: "🥗", description: "Referred to dietitian for carbohydrate management." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 8.1 }, { month: "Apr", value: 7.9 }, { month: "May", value: 7.6 },
+          { month: "Jun", value: 7.4 }, { month: "Jul", value: 7.3 }, { month: "Aug", value: 7.2 }
+        ]
+      },
+      {
+        id: 2,
+        name: "Sunita Deshmukh",
+        age: 45,
+        gender: "Female",
+        phone: "+91 9826519374",
+        condition: "Hypertension",
+        adherence: 90,
+        lastVisit: "2026-07-27",
+        nextVisit: "2026-08-24",
+        status: "Follow-up Due",
+        vitals: { fbs: "98 mg/dL", bp: "150/95 mmHg", hba1c: "5.6%", bmi: "24.8", weight: "65 kg", spo2: "98%" },
+        allergies: [],
+        medicines: [
+          { name: "Amlodipine", dose: "5mg", frequency: "Once daily", timing: ["Morning", "After Food"], adherence: 92 },
+          { name: "Telmisartan", dose: "40mg", frequency: "Once daily", timing: ["Morning", "Before Food"], adherence: 88 }
+        ],
+        timeline: [
+          { date: "2026-07-27", title: "Consultation", icon: "🩺", description: "BP still elevated at 150/95, medication dose increased." },
+          { date: "2026-06-22", title: "Home BP Log Reviewed", icon: "📈", description: "Average home readings 145/92 over two weeks." },
+          { date: "2026-05-10", title: "Lab Report", icon: "🧪", description: "Renal function tests normal, electrolytes balanced." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 5.5 }, { month: "Apr", value: 5.6 }, { month: "May", value: 5.7 },
+          { month: "Jun", value: 5.6 }, { month: "Jul", value: 5.6 }, { month: "Aug", value: 5.6 }
+        ]
+      },
+      {
+        id: 3,
+        name: "Priya Nair",
+        age: 29,
+        gender: "Female",
+        phone: "+91 8516924730",
+        condition: "PCOS",
+        adherence: 75,
+        lastVisit: "2026-07-15",
+        nextVisit: "2026-08-15",
+        status: "Active",
+        vitals: { fbs: "105 mg/dL", bp: "118/76 mmHg", hba1c: "5.4%", bmi: "29.1", weight: "72 kg", spo2: "99%" },
+        allergies: ["Sulfa drugs"],
+        medicines: [
+          { name: "Metformin", dose: "500mg", frequency: "Twice daily", timing: ["Morning", "Night", "After Food"], adherence: 70 },
+          { name: "Myo-Inositol", dose: "1000mg", frequency: "Twice daily", timing: ["Morning", "Night"], adherence: 78 }
+        ],
+        timeline: [
+          { date: "2026-07-15", title: "Consultation", icon: "🩺", description: "Menstrual cycle regularity improved, weight loss plan reviewed." },
+          { date: "2026-05-30", title: "Ultrasound", icon: "🖥️", description: "Pelvic ultrasound shows reduced ovarian cyst count." },
+          { date: "2026-04-12", title: "Lab Report", icon: "🧪", description: "LH/FSH ratio and testosterone levels ordered." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 5.6 }, { month: "Apr", value: 5.5 }, { month: "May", value: 5.5 },
+          { month: "Jun", value: 5.4 }, { month: "Jul", value: 5.4 }, { month: "Aug", value: 5.4 }
+        ]
+      },
+      {
+        id: 4,
+        name: "Anil Verma",
+        age: 62,
+        gender: "Male",
+        phone: "+91 7392604815",
+        condition: "Coronary Artery Disease",
+        adherence: 60,
+        lastVisit: "2026-06-30",
+        nextVisit: "2026-07-20",
+        status: "Critical",
+        vitals: { fbs: "130 mg/dL", bp: "160/100 mmHg", hba1c: "6.8%", bmi: "26.5", weight: "80 kg", spo2: "94%" },
+        allergies: ["Aspirin"],
+        medicines: [
+          { name: "Clopidogrel", dose: "75mg", frequency: "Once daily", timing: ["Morning", "After Food"], adherence: 55 },
+          { name: "Atorvastatin", dose: "40mg", frequency: "Once daily", timing: ["Night"], adherence: 62 },
+          { name: "Metoprolol", dose: "25mg", frequency: "Twice daily", timing: ["Morning", "Night", "After Food"], adherence: 58 }
+        ],
+        timeline: [
+          { date: "2026-06-30", title: "Emergency Review", icon: "🚨", description: "Reported chest discomfort, ECG and troponin ordered, stable now." },
+          { date: "2026-06-14", title: "Angiography Follow-up", icon: "🫀", description: "Stent patency confirmed, medication regimen intensified." },
+          { date: "2026-05-06", title: "Lab Report", icon: "🧪", description: "Lipid profile shows elevated LDL, statin dose increased." },
+          { date: "2026-03-25", title: "Consultation", icon: "🩺", description: "Discussed cardiac rehab and lifestyle modification." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 6.2 }, { month: "Apr", value: 6.4 }, { month: "May", value: 6.5 },
+          { month: "Jun", value: 6.6 }, { month: "Jul", value: 6.7 }, { month: "Aug", value: 6.8 }
+        ]
+      },
+      {
+        id: 5,
+        name: "Meera Iyer",
+        age: 51,
+        gender: "Female",
+        phone: "+91 9148360527",
+        condition: "Hypothyroidism",
+        adherence: 88,
+        lastVisit: "2026-08-05",
+        nextVisit: "2026-11-02",
+        status: "Report Pending",
+        vitals: { fbs: "92 mg/dL", bp: "122/80 mmHg", hba1c: "5.5%", bmi: "25.0", weight: "68 kg", spo2: "98%" },
+        allergies: [],
+        medicines: [
+          { name: "Levothyroxine", dose: "75mcg", frequency: "Once daily", timing: ["Morning", "Before Food"], adherence: 90 }
+        ],
+        timeline: [
+          { date: "2026-08-05", title: "Consultation", icon: "🩺", description: "TSH repeat test ordered, dose to be reviewed after results." },
+          { date: "2026-05-03", title: "Lab Report", icon: "🧪", description: "TSH 6.2 mIU/L, slightly elevated, dose adjusted." },
+          { date: "2026-02-06", title: "Prescription Renewed", icon: "💊", description: "Levothyroxine renewed for 90 days." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 5.5 }, { month: "Apr", value: 5.5 }, { month: "May", value: 5.4 },
+          { month: "Jun", value: 5.5 }, { month: "Jul", value: 5.5 }, { month: "Aug", value: 5.5 }
+        ]
+      },
+      {
+        id: 6,
+        name: "Vikram Singh Rathore",
+        age: 40,
+        gender: "Male",
+        phone: "+91 8639052743",
+        condition: "Type 2 Diabetes with Obesity",
+        adherence: 55,
+        lastVisit: "2026-07-23",
+        nextVisit: "2026-08-06",
+        status: "Critical",
+        vitals: { fbs: "210 mg/dL", bp: "140/92 mmHg", hba1c: "9.1%", bmi: "33.2", weight: "95 kg", spo2: "96%" },
+        allergies: ["Metformin (GI upset)"],
+        medicines: [
+          { name: "Sitagliptin", dose: "100mg", frequency: "Once daily", timing: ["Morning", "After Food"], adherence: 50 },
+          { name: "Insulin Glargine", dose: "18 units", frequency: "Once daily", timing: ["Night"], adherence: 58 },
+          { name: "Empagliflozin", dose: "10mg", frequency: "Once daily", timing: ["Morning"], adherence: 52 }
+        ],
+        timeline: [
+          { date: "2026-07-23", title: "Consultation", icon: "🩺", description: "HbA1c critically high at 9.1%, insulin regimen intensified." },
+          { date: "2026-06-09", title: "Lab Report", icon: "🧪", description: "Random blood glucose 268 mg/dL, urgent review scheduled." },
+          { date: "2026-05-15", title: "Missed Appointment", icon: "⏰", description: "Patient did not attend scheduled follow-up." },
+          { date: "2026-03-30", title: "Diet Counselling", icon: "🥗", description: "Structured weight-loss and carbohydrate plan initiated." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 7.8 }, { month: "Apr", value: 8.2 }, { month: "May", value: 8.5 },
+          { month: "Jun", value: 8.8 }, { month: "Jul", value: 9.0 }, { month: "Aug", value: 9.1 }
+        ]
+      },
+      {
+        id: 7,
+        name: "Kavita Joshi",
+        age: 34,
+        gender: "Female",
+        phone: "+91 9471830625",
+        condition: "Asthma",
+        adherence: 95,
+        lastVisit: "2026-07-31",
+        nextVisit: "2026-09-28",
+        status: "Active",
+        vitals: { fbs: "88 mg/dL", bp: "110/70 mmHg", hba1c: "5.2%", bmi: "22.3", weight: "58 kg", spo2: "97%" },
+        allergies: ["Dust mites", "Pollen"],
+        medicines: [
+          { name: "Budesonide + Formoterol Inhaler", dose: "200/6 mcg", frequency: "Twice daily", timing: ["Morning", "Night"], adherence: 96 },
+          { name: "Montelukast", dose: "10mg", frequency: "Once daily", timing: ["Night", "After Food"], adherence: 93 }
+        ],
+        timeline: [
+          { date: "2026-07-31", title: "Consultation", icon: "🩺", description: "Well controlled, no nocturnal symptoms in past month." },
+          { date: "2026-05-26", title: "Spirometry", icon: "📈", description: "FEV1 improved to 92% of predicted value." },
+          { date: "2026-03-17", title: "Prescription Renewed", icon: "💊", description: "Inhaler combination renewed for 120 days." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 5.3 }, { month: "Apr", value: 5.2 }, { month: "May", value: 5.3 },
+          { month: "Jun", value: 5.2 }, { month: "Jul", value: 5.2 }, { month: "Aug", value: 5.2 }
+        ]
+      },
+      {
+        id: 8,
+        name: "Suresh Reddy",
+        age: 67,
+        gender: "Male",
+        phone: "+91 7059261483",
+        condition: "Chronic Kidney Disease Stage 3",
+        adherence: 70,
+        lastVisit: "2026-07-13",
+        nextVisit: "2026-08-13",
+        status: "Follow-up Due",
+        vitals: { fbs: "110 mg/dL", bp: "145/88 mmHg", hba1c: "6.5%", bmi: "24.0", weight: "70 kg", spo2: "95%" },
+        allergies: ["NSAIDs"],
+        medicines: [
+          { name: "Losartan", dose: "50mg", frequency: "Once daily", timing: ["Morning", "After Food"], adherence: 75 },
+          { name: "Sodium Bicarbonate", dose: "500mg", frequency: "Twice daily", timing: ["Morning", "Night"], adherence: 65 },
+          { name: "Erythropoietin", dose: "4000 IU", frequency: "Weekly", timing: ["Morning"], adherence: 70 }
+        ],
+        timeline: [
+          { date: "2026-07-13", title: "Consultation", icon: "🩺", description: "eGFR stable at 42 mL/min, avoid NSAIDs reiterated." },
+          { date: "2026-05-27", title: "Lab Report", icon: "🧪", description: "Serum creatinine 1.9 mg/dL, potassium within range." },
+          { date: "2026-04-04", title: "Nephrology Referral", icon: "📋", description: "Reviewed jointly with nephrologist, plan unchanged." }
+        ],
+        hba1cTrend: [
+          { month: "Mar", value: 6.3 }, { month: "Apr", value: 6.4 }, { month: "May", value: 6.4 },
+          { month: "Jun", value: 6.5 }, { month: "Jul", value: 6.5 }, { month: "Aug", value: 6.5 }
+        ]
+      }
+    ]
+  };
+
+  appState.dashboardToday = {
+    rxWrittenToday: 6,
+    missedDosesToday: 4,
+    deltas: {
+      activePatients: { dir: 'up', text: '+2 this month' },
+      adherence: { dir: 'up', text: '+3% vs last week' },
+      prescriptions: { dir: 'up', text: '+5 this week' },
+      missedDoses: { dir: 'down', text: '-2 vs yesterday' }
+    }
+  };
+
+  appState.weeklyAdherence = [
+    { day: 'Mon', value: 81 }, { day: 'Tue', value: 85 }, { day: 'Wed', value: 79 },
+    { day: 'Thu', value: 88 }, { day: 'Fri', value: 92 }, { day: 'Sat', value: 74 },
+    { day: 'Sun', value: 83 }
+  ];
+
+  appState.labReportsInbox = [
+    {
+      id: 1, patientId: 4, patientName: 'Anil Verma', testName: 'Lipid Profile', flag: 'Critical', date: '2026-08-07',
+      resultStatus: 'Critical', sourceLab: 'Apex Diagnostics Lab, Mumbai', uploadTime: '2026-08-07 09:14 AM',
+      reviewed: false, flaggedUrgent: false,
+      parameters: [
+        { name: 'LDL Cholesterol', value: '168 mg/dL', range: '< 100 mg/dL', status: 'High' },
+        { name: 'HDL Cholesterol', value: '38 mg/dL', range: '> 40 mg/dL', status: 'Low' },
+        { name: 'Triglycerides', value: '210 mg/dL', range: '< 150 mg/dL', status: 'High' },
+        { name: 'Total Cholesterol', value: '245 mg/dL', range: '< 200 mg/dL', status: 'High' }
+      ]
+    },
+    {
+      id: 2, patientId: 6, patientName: 'Vikram Singh Rathore', testName: 'Random Blood Glucose', flag: 'Critical', date: '2026-08-08',
+      resultStatus: 'Critical', sourceLab: 'MedCore Path Labs', uploadTime: '2026-08-08 11:32 AM',
+      reviewed: false, flaggedUrgent: false,
+      parameters: [
+        { name: 'Random Blood Glucose', value: '268 mg/dL', range: '70 - 140 mg/dL', status: 'Critical' },
+        { name: 'HbA1c', value: '9.1%', range: '< 5.7%', status: 'Critical' },
+        { name: 'eGFR', value: '88 mL/min', range: '> 90 mL/min', status: 'Borderline' }
+      ]
+    },
+    {
+      id: 3, patientId: 5, patientName: 'Meera Iyer', testName: 'TSH (Repeat)', flag: 'Pending Review', date: '2026-08-05',
+      resultStatus: 'Borderline', sourceLab: 'Apex Diagnostics Lab, Mumbai', uploadTime: '2026-08-05 03:47 PM',
+      reviewed: false, flaggedUrgent: false,
+      parameters: [
+        { name: 'TSH', value: '6.2 mIU/L', range: '0.4 - 4.0 mIU/L', status: 'Borderline' },
+        { name: 'Free T4', value: '1.1 ng/dL', range: '0.8 - 1.8 ng/dL', status: 'Normal' }
+      ]
+    },
+    {
+      id: 4, patientId: 8, patientName: 'Suresh Reddy', testName: 'Serum Creatinine', flag: 'Review', date: '2026-08-06',
+      resultStatus: 'Borderline', sourceLab: 'MedCore Path Labs', uploadTime: '2026-08-06 08:20 AM',
+      reviewed: false, flaggedUrgent: false,
+      parameters: [
+        { name: 'Serum Creatinine', value: '1.9 mg/dL', range: '0.7 - 1.3 mg/dL', status: 'Borderline' },
+        { name: 'eGFR', value: '42 mL/min', range: '> 60 mL/min', status: 'Low' },
+        { name: 'Potassium', value: '4.8 mEq/L', range: '3.5 - 5.0 mEq/L', status: 'Normal' }
+      ]
+    },
+    {
+      id: 5, patientId: 7, patientName: 'Kavita Joshi', testName: 'Spirometry', flag: 'Normal', date: '2026-08-01',
+      resultStatus: 'Normal', sourceLab: 'Apex Diagnostics Lab, Mumbai', uploadTime: '2026-08-01 04:05 PM',
+      reviewed: true, flaggedUrgent: false,
+      parameters: [
+        { name: 'FEV1', value: '92% predicted', range: '> 80% predicted', status: 'Normal' },
+        { name: 'FVC', value: '95% predicted', range: '> 80% predicted', status: 'Normal' }
+      ]
+    }
+  ];
+
+  appState.recentAlerts = [
+    { type: 'critical', icon: '🚨', text: 'Vikram Singh Rathore missed 2 consecutive Insulin doses', time: '35 min ago' },
+    { type: 'warning', icon: '🩺', text: 'Anil Verma logged BP 160/100 — above target range', time: '2 hr ago' },
+    { type: 'info', icon: '🧪', text: 'Lab report ready for review: Meera Iyer (TSH)', time: '4 hr ago' },
+    { type: 'warning', icon: '📅', text: 'Suresh Reddy follow-up visit overdue by 3 days', time: '1 day ago' }
+  ];
+
+  appState.appointments = [
+    { id: 1, time: '09:00 AM', patientId: 1, patientName: 'Ramesh Kumar Patil', type: 'Follow-up', notes: 'Review HbA1c trend and dosage', status: 'Confirmed' },
+    { id: 2, time: '09:30 AM', patientId: 2, patientName: 'Sunita Deshmukh', type: 'Teleconsult', notes: 'BP recheck after dose change', status: 'Confirmed' },
+    { id: 3, time: '10:00 AM', patientId: null, patientName: null, type: null, notes: '', status: 'Open Slot' },
+    { id: 4, time: '10:30 AM', patientId: 3, patientName: 'Priya Nair', type: 'In-person', notes: 'PCOS review, ultrasound results', status: 'Confirmed' },
+    { id: 5, time: '11:00 AM', patientId: 4, patientName: 'Anil Verma', type: 'Follow-up', notes: 'Post-angiography review', status: 'Waiting' },
+    { id: 6, time: '02:00 PM', patientId: 5, patientName: 'Meera Iyer', type: 'Teleconsult', notes: 'Discuss TSH repeat results', status: 'Confirmed' },
+    { id: 7, time: '02:30 PM', patientId: 6, patientName: 'Vikram Singh Rathore', type: 'In-person', notes: 'Insulin regimen review — Critical', status: 'Confirmed' },
+    { id: 8, time: '03:00 PM', patientId: null, patientName: null, type: null, notes: '', status: 'Open Slot' },
+    { id: 9, time: '03:30 PM', patientId: 7, patientName: 'Kavita Joshi', type: 'In-person', notes: 'Routine asthma review', status: 'Completed' },
+    { id: 10, time: '04:00 PM', patientId: 8, patientName: 'Suresh Reddy', type: 'Teleconsult', notes: 'CKD monitoring, avoid NSAIDs reminder', status: 'Confirmed' }
+  ];
+
+  appState.prescriptions = [
+    {
+      id: 'RX-2026-8801',
+      patientId: 1,
+      patientName: 'Ramesh Kumar Patil',
+      diagnosis: 'E11.9 - Type 2 Diabetes Mellitus, without complications',
+      chiefComplaint: 'Follow-up for diabetes management; occasional fatigue.',
+      issueDate: '2026-07-10',
+      validityDate: '2026-09-08',
+      drugs: [
+        { name: 'Metformin', dose: '500mg', frequency: 'Twice daily', timing: ['Morning', 'After Food'], duration: '60 days', notes: '' },
+        { name: 'Glimepiride', dose: '1mg', frequency: 'Once daily', timing: ['Morning', 'Before Food'], duration: '60 days', notes: '' },
+        { name: 'Atorvastatin', dose: '10mg', frequency: 'Once daily', timing: ['Night', 'After Food'], duration: '60 days', notes: '' }
+      ],
+      tests: ['HbA1c', 'Fasting Lipid Profile', 'Serum Creatinine'],
+      followUpDate: '2026-08-07',
+      instructions: 'Continue low-carbohydrate diet, monitor fasting sugar weekly, review in 4 weeks.'
+    },
+    {
+      id: 'RX-2026-8802',
+      patientId: 2,
+      patientName: 'Sunita Deshmukh',
+      diagnosis: 'I10 - Essential (Primary) Hypertension',
+      chiefComplaint: 'Follow-up for blood pressure control; mild headaches.',
+      issueDate: '2026-07-27',
+      validityDate: '2026-08-26',
+      drugs: [
+        { name: 'Amlodipine', dose: '5mg', frequency: 'Once daily', timing: ['Morning', 'After Food'], duration: '30 days', notes: '' },
+        { name: 'Telmisartan', dose: '40mg', frequency: 'Once daily', timing: ['Morning', 'Before Food'], duration: '30 days', notes: '' }
+      ],
+      tests: ['ECG', 'Serum Electrolytes', 'Lipid Profile'],
+      followUpDate: '2026-08-10',
+      instructions: 'Reduce salt intake, monitor home BP twice daily, review in 2 weeks.'
+    },
+    {
+      id: 'RX-2026-8803',
+      patientId: 3,
+      patientName: 'Priya Nair',
+      diagnosis: 'E28.2 - Polycystic Ovarian Syndrome',
+      chiefComplaint: 'Follow-up for PCOS; irregular cycles improving.',
+      issueDate: '2026-07-15',
+      validityDate: '2026-08-14',
+      drugs: [
+        { name: 'Metformin', dose: '500mg', frequency: 'Twice daily', timing: ['Morning', 'Night', 'After Food'], duration: '30 days', notes: '' },
+        { name: 'Myo-Inositol', dose: '1000mg', frequency: 'Twice daily', timing: ['Morning', 'Night'], duration: '30 days', notes: '' }
+      ],
+      tests: ['LH/FSH Ratio', 'Serum Testosterone', 'Pelvic Ultrasound'],
+      followUpDate: '2026-10-15',
+      instructions: 'Continue weight management plan, repeat ultrasound in 3 months.'
+    },
+    {
+      id: 'RX-2026-8804',
+      patientId: 4,
+      patientName: 'Anil Verma',
+      diagnosis: 'I25.10 - Coronary Artery Disease',
+      chiefComplaint: 'Chest discomfort on exertion, follow-up post-angiography.',
+      issueDate: '2026-06-30',
+      validityDate: '2026-07-30',
+      drugs: [
+        { name: 'Clopidogrel', dose: '75mg', frequency: 'Once daily', timing: ['Morning', 'After Food'], duration: '30 days', notes: '' },
+        { name: 'Atorvastatin', dose: '40mg', frequency: 'Once daily', timing: ['Night'], duration: '30 days', notes: '' },
+        { name: 'Metoprolol', dose: '25mg', frequency: 'Twice daily', timing: ['Morning', 'Night', 'After Food'], duration: '30 days', notes: '' }
+      ],
+      tests: ['ECG', 'Troponin-I', 'Lipid Profile'],
+      followUpDate: '2026-07-28',
+      instructions: 'Strict cardiac diet, avoid strenuous activity, cardiac rehab continued.'
+    },
+    {
+      id: 'RX-2026-8805',
+      patientId: 5,
+      patientName: 'Meera Iyer',
+      diagnosis: 'E03.9 - Hypothyroidism, unspecified',
+      chiefComplaint: 'Fatigue and weight gain; thyroid function follow-up.',
+      issueDate: '2026-08-05',
+      validityDate: '2026-11-03',
+      drugs: [
+        { name: 'Levothyroxine', dose: '75mcg', frequency: 'Once daily', timing: ['Morning', 'Before Food'], duration: '90 days', notes: '' }
+      ],
+      tests: ['TSH', 'Free T4'],
+      followUpDate: '2026-09-16',
+      instructions: 'Recheck TSH in 6 weeks after dose adjustment.'
+    },
+    {
+      id: 'RX-2026-8806',
+      patientId: 6,
+      patientName: 'Vikram Singh Rathore',
+      diagnosis: 'E11.9 - Type 2 Diabetes Mellitus, with obesity',
+      chiefComplaint: 'Poor glycemic control; increased thirst and urination.',
+      issueDate: '2026-07-23',
+      validityDate: '2026-08-17',
+      drugs: [
+        { name: 'Sitagliptin', dose: '100mg', frequency: 'Once daily', timing: ['Morning', 'After Food'], duration: '30 days', notes: '' },
+        { name: 'Insulin Glargine', dose: '18 units', frequency: 'Once daily', timing: ['Night'], duration: '30 days', notes: 'Rotate injection site' },
+        { name: 'Empagliflozin', dose: '10mg', frequency: 'Once daily', timing: ['Morning'], duration: '30 days', notes: '' }
+      ],
+      tests: ['HbA1c', 'Random Blood Glucose', 'Lipid Profile'],
+      followUpDate: '2026-08-06',
+      instructions: 'Insulin titration as advised, strict diet compliance required, review in 2 weeks.'
+    },
+    {
+      id: 'RX-2026-8807',
+      patientId: 7,
+      patientName: 'Kavita Joshi',
+      diagnosis: 'J45.909 - Bronchial Asthma, unspecified',
+      chiefComplaint: 'Follow-up asthma review; well controlled, no nocturnal symptoms.',
+      issueDate: '2026-07-31',
+      validityDate: '2026-10-29',
+      drugs: [
+        { name: 'Budesonide + Formoterol Inhaler', dose: '200/6 mcg', frequency: 'Twice daily', timing: ['Morning', 'Night'], duration: '90 days', notes: '2 puffs each dose' },
+        { name: 'Montelukast', dose: '10mg', frequency: 'Once daily', timing: ['Night', 'After Food'], duration: '90 days', notes: '' }
+      ],
+      tests: ['Spirometry', 'Peak Flow Rate'],
+      followUpDate: '2026-10-29',
+      instructions: 'Continue inhaler technique review, avoid known allergens.'
+    },
+    {
+      id: 'RX-2026-8808',
+      patientId: 8,
+      patientName: 'Suresh Reddy',
+      diagnosis: 'N18.3 - Chronic Kidney Disease, Stage 3',
+      chiefComplaint: 'Routine CKD monitoring follow-up; no new symptoms.',
+      issueDate: '2026-06-13',
+      validityDate: '2026-07-13',
+      drugs: [
+        { name: 'Losartan', dose: '50mg', frequency: 'Once daily', timing: ['Morning', 'After Food'], duration: '30 days', notes: '' },
+        { name: 'Sodium Bicarbonate', dose: '500mg', frequency: 'Twice daily', timing: ['Morning', 'Night'], duration: '30 days', notes: '' },
+        { name: 'Erythropoietin', dose: '4000 IU', frequency: 'Weekly', timing: ['Morning'], duration: '4 weeks', notes: 'Subcutaneous injection' }
+      ],
+      tests: ['Serum Creatinine', 'eGFR', 'Serum Electrolytes'],
+      followUpDate: '2026-07-27',
+      instructions: 'Avoid NSAIDs, maintain fluid balance, review in 4 weeks.'
+    }
+  ];
+
+  appState.conversations = [
+    {
+      id: 1, patientId: 4, online: true,
+      messages: [
+        { from: 'patient', text: "Doctor, I've been getting chest tightness again since yesterday evening. Should I be worried?", time: '10:02 AM', read: true },
+        { from: 'doctor', text: 'Please monitor for now — avoid exertion and take your Clopidogrel as prescribed. If it worsens or you feel breathless, go to the ER immediately.', time: '10:15 AM', read: true },
+        { from: 'patient', text: "Okay, I'll monitor it. Also, my last lipid report looked high — will you review it?", time: '10:18 AM', read: false }
+      ]
+    },
+    {
+      id: 2, patientId: 6, online: true,
+      messages: [
+        { from: 'patient', text: "Sorry doctor, I missed my night insulin dose yesterday. Should I take a double dose today?", time: '09:20 AM', read: true },
+        { from: 'doctor', text: 'No, never double up. Take your regular dose tonight and monitor your sugar closely. Let’s discuss at your next visit.', time: '09:26 AM', read: true }
+      ]
+    },
+    {
+      id: 3, patientId: 2, online: false,
+      messages: [
+        { from: 'patient', text: 'Good morning doctor, my home BP readings this week have been steady around 138/88.', time: 'Yesterday', read: true },
+        { from: 'doctor', text: "That's an improvement. Continue the current dose and keep logging your readings.", time: 'Yesterday', read: true }
+      ]
+    },
+    {
+      id: 4, patientId: 3, online: false,
+      messages: [
+        { from: 'patient', text: 'Hi doctor, just confirming my next ultrasound appointment is in October, right?', time: '2 days ago', read: true },
+        { from: 'doctor', text: 'Yes, that’s correct — we scheduled it for October 15th.', time: '2 days ago', read: true }
+      ]
+    },
+    {
+      id: 5, patientId: 7, online: false,
+      messages: [
+        { from: 'patient', text: 'My inhaler is running low, could you send a refill prescription?', time: '3 days ago', read: true },
+        { from: 'doctor', text: "Sure, I'll write a fresh 90-day supply for you today.", time: '3 days ago', read: true }
+      ]
+    }
+  ];
+
+  appState.notifications = [
+    { id: 1, category: 'lab', type: 'critical', icon: '🧪', title: 'Critical Lab Result: Vikram Singh Rathore', description: 'Random Blood Glucose 268 mg/dL — immediate review recommended.', time: '35 min ago', patientId: 6, read: false },
+    { id: 2, category: 'missed-dose', type: 'warning', icon: '💊', title: 'Missed Dose Alert: Vikram Singh Rathore', description: 'Missed Insulin Glargine dose (Night) for 2 consecutive days.', time: '1 hr ago', patientId: 6, read: false },
+    { id: 3, category: 'message', type: 'critical', icon: '💬', title: 'New Message: Anil Verma', description: '"I’m feeling chest tightness again, should I be worried?"', time: '2 hr ago', patientId: 4, read: false },
+    { id: 4, category: 'lab', type: 'critical', icon: '🧪', title: 'Critical Lab Result: Anil Verma', description: 'Lipid Profile shows elevated LDL and Triglycerides.', time: '3 hr ago', patientId: 4, read: true },
+    { id: 5, category: 'other', type: 'info', icon: '📄', title: 'Prescription Delivered: Sunita Deshmukh', description: 'e-Prescription RX-2026-8802 was successfully delivered to the patient.', time: '5 hr ago', patientId: 2, read: true },
+    { id: 6, category: 'other', type: 'warning', icon: '📅', title: 'Follow-up Due: Suresh Reddy', description: 'Follow-up visit was due on 2026-08-13.', time: '1 day ago', patientId: 8, read: false },
+    { id: 7, category: 'other', type: 'info', icon: '🆕', title: 'New Patient Registered', description: 'A new patient record was added to your roster.', time: '1 day ago', patientId: null, read: true },
+    { id: 8, category: 'lab', type: 'warning', icon: '🧪', title: 'Lab Report Ready: Meera Iyer', description: 'TSH (Repeat) results uploaded — Borderline, review recommended.', time: '2 days ago', patientId: 5, read: false }
+  ];
+
+  appState.notificationSettings = {
+    criticalLabAlerts: true,
+    missedDoseAlerts: true,
+    weeklyAdherenceSummary: true,
+    followUpReminders: true,
+    newPatientAlerts: false
+  };
+
+  appState.subscription = {
+    plan: 'SymptoTrack Enterprise',
+    status: 'Active',
+    renewalDate: '2027-03-14',
+    features: [
+      'Unlimited Patient Records',
+      'AI Drug Interaction Checks',
+      'ABDM / ABHA Integration',
+      'Priority Support',
+      'Multi-Doctor Clinic Accounts'
+    ]
+  };
+
+  /* ==========================================================================
+     SCREEN TITLE LOOKUP
+     ========================================================================== */
+  var screenTitles = {
+    dashboard: "Dashboard",
+    patients: "Patients",
+    schedule: "Schedule",
+    "rx-history": "Prescriptions",
+    messages: "Messages",
+    "lab-reports": "Lab Reports",
+    profile: "My Profile & Settings",
+    notifications: "Notifications",
+    "add-patient": "Add Patient",
+    "write-rx": "Write Prescription",
+    "prescription-detail": "Prescription"
+  };
+
+  /* ==========================================================================
+     CORE FUNCTIONS
+     ========================================================================== */
+  var SCREEN_RENDERERS = {
+    dashboard: renderDashboardScreen,
+    schedule: renderScheduleScreen,
+    patients: renderPatientsScreen,
+    'write-rx': renderWriteRxScreen,
+    'rx-history': renderRxHistoryScreen,
+    'prescription-detail': renderPrescriptionDetailScreen,
+    'lab-reports': renderLabReportsScreen,
+    messages: renderMessagesScreen,
+    notifications: renderNotificationsScreen,
+    profile: renderProfileScreen
+  };
+
+  function go(screenId) {
+    var screens = document.querySelectorAll('.screen');
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].style.display = 'none';
+    }
+    var target = document.getElementById('screen-' + screenId);
+    if (target) {
+      target.style.display = 'block';
+      if (typeof SCREEN_RENDERERS[screenId] === 'function') {
+        SCREEN_RENDERERS[screenId]();
+      }
+    }
+    var links = document.querySelectorAll('.nav-link');
+    for (var j = 0; j < links.length; j++) {
+      if (links[j].dataset.screen === screenId) {
+        links[j].classList.add('active');
+      } else {
+        links[j].classList.remove('active');
+      }
+    }
+    window.appState.currentScreen = screenId;
+    var titleEl = document.getElementById('topbar-title');
+    if (titleEl) {
+      titleEl.textContent = screenTitles[screenId] || (screenId.charAt(0).toUpperCase() + screenId.slice(1));
+    }
+    syncNotifDots();
+  }
+
+  var TOAST_ICONS = { info: 'ℹ', success: '✓', warning: '⚠', error: '✕' };
+
+  function toast(message, type = 'info') {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+    var el = document.createElement('div');
+    el.className = 'toast toast-' + type;
+    var icon = document.createElement('span');
+    icon.className = 'toast-icon';
+    icon.textContent = TOAST_ICONS[type] || TOAST_ICONS.info;
+    var text = document.createElement('span');
+    text.className = 'toast-text';
+    text.textContent = message;
+    el.appendChild(icon);
+    el.appendChild(text);
+    container.appendChild(el);
+    requestAnimationFrame(function () {
+      el.classList.add('show');
+    });
+    setTimeout(function () {
+      el.classList.remove('show');
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 300);
+    }, 3000);
+  }
+
+  function statusBadgeClass(status) {
+    switch (status) {
+      case 'Active': return 'badge-green';
+      case 'Follow-up Due': return 'badge-amber';
+      case 'Critical': return 'badge-red';
+      case 'Report Pending': return 'badge-blue';
+      default: return 'badge-blue';
+    }
+  }
+
+  var currentDetailPatientId = null;
+
+  function findPatientById(id) {
+    var list = window.appState.patients || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id == id) return list[i];
+    }
+    return null;
+  }
+
+  function firstNumber(str) {
+    var m = String(str || '').match(/[\d.]+/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+
+  function adherenceBarClass(pct) {
+    if (pct >= 80) return 'bar-green';
+    if (pct >= 50) return 'bar-amber';
+    return 'bar-red';
+  }
+
+  function timingLabel(tag) {
+    var map = { 'Morning': '🌅 Morning', 'Night': '🌙 Night', 'After Food': '🍽️ After Food', 'Before Food': '⏳ Before Food' };
+    return map[tag] || tag;
+  }
+
+  function dpWriteRx() {
+    var p = findPatientById(currentDetailPatientId);
+    if (!p) return;
+    closeDetail();
+    openWriteRx(p.id);
+  }
+
+  function openDetail(patientId) {
+    var patient = findPatientById(patientId);
+    if (!patient) return;
+    currentDetailPatientId = patient.id;
+
+    var nameEl = document.getElementById('dp-patient-name');
+    if (nameEl) nameEl.textContent = patient.name;
+
+    var metaEl = document.getElementById('dp-patient-meta');
+    if (metaEl) metaEl.textContent = patient.age + ' yrs · ' + patient.gender + ' · ' + patient.condition;
+
+    // ---- Overview tab ----
+    var overview = document.getElementById('dp-tab-overview');
+    if (overview) {
+      var alerts = [];
+      (patient.allergies || []).forEach(function (a) {
+        alerts.push('⚠ Allergic to: ' + a);
+      });
+      var v = patient.vitals || {};
+      var bpParts = String(v.bp || '').split('/');
+      var systolic = firstNumber(bpParts[0]);
+      var diastolic = firstNumber(bpParts[1]);
+      if (systolic > 140 || diastolic > 90) {
+        alerts.push('⚠ High Blood Pressure (' + (v.bp || '—') + ')');
+      }
+      var fbsVal = firstNumber(v.fbs);
+      if (fbsVal > 126) {
+        alerts.push('⚠ High Blood Sugar (' + v.fbs + ')');
+      }
+      var hba1cVal = firstNumber(v.hba1c);
+      if (hba1cVal > 7.0) {
+        alerts.push('⚠ HbA1c Above Target (' + v.hba1c + ')');
+      }
+      var alertsHtml = alerts.length
+        ? '<div class="dp-alert-box dp-alert-warning">' + alerts.map(function (a) { return '<div class="dp-alert-line">' + a + '</div>'; }).join('') + '</div>'
+        : '<div class="dp-alert-box dp-alert-ok">✓ No active alerts</div>';
+
+      var miniVitalDefs = [
+        { key: 'fbs', label: 'Fasting Blood Sugar' },
+        { key: 'bp', label: 'Blood Pressure' },
+        { key: 'hba1c', label: 'HbA1c' },
+        { key: 'bmi', label: 'BMI' }
+      ];
+      var miniVitalsHtml = miniVitalDefs.map(function (d) {
+        return '<div class="dp-vital-tile"><div class="val">' + (v[d.key] || '—') + '</div><div class="lbl">' + d.label + '</div></div>';
+      }).join('');
+
+      var medBreakdownHtml = (patient.medicines || []).map(function (m) {
+        return '<div class="dp-med-breakdown-row"><span>' + m.name + '</span><span>' + m.adherence + '%</span></div>';
+      }).join('') || '<div class="dp-med-breakdown-row"><span>No medicines recorded</span></div>';
+
+      var daysSinceVisit = Math.round((new Date() - new Date(patient.lastVisit)) / 86400000);
+
+      overview.innerHTML =
+        '<div class="dp-section">' +
+          '<div class="dp-section-title">Alerts</div>' +
+          alertsHtml +
+        '</div>' +
+        '<div class="dp-section">' +
+          '<div class="dp-section-title">Key Vitals</div>' +
+          '<div class="dp-vitals-grid">' + miniVitalsHtml + '</div>' +
+        '</div>' +
+        '<div class="dp-section">' +
+          '<div class="dp-section-title">Medicine Adherence — ' + patient.adherence + '%</div>' +
+          '<div class="bar-track"><div class="bar-fill ' + adherenceBarClass(patient.adherence) + '" style="width:' + patient.adherence + '%"></div></div>' +
+          '<div class="dp-med-breakdown">' + medBreakdownHtml + '</div>' +
+        '</div>' +
+        '<div class="dp-section dp-stat-row">' +
+          '<div class="stat-tile"><div class="stat-number">' + (patient.medicines || []).length + '</div><div class="stat-label">Active Medicines</div></div>' +
+          '<div class="stat-tile"><div class="stat-number">' + patient.adherence + '%</div><div class="stat-label">Overall Adherence</div></div>' +
+          '<div class="stat-tile"><div class="stat-number">' + daysSinceVisit + '</div><div class="stat-label">Days Since Last Visit</div></div>' +
+        '</div>';
+    }
+
+    // ---- Vitals tab ----
+    var vitalsEl = document.getElementById('dp-tab-vitals');
+    if (vitalsEl) {
+      var v6 = patient.vitals || {};
+      var vitalDefs = [
+        { key: 'fbs', label: 'Fasting Blood Sugar' },
+        { key: 'bp', label: 'Blood Pressure' },
+        { key: 'hba1c', label: 'HbA1c' },
+        { key: 'bmi', label: 'BMI' },
+        { key: 'weight', label: 'Weight' },
+        { key: 'spo2', label: 'SpO2' }
+      ];
+      var tiles = vitalDefs.map(function (d) {
+        return '<div class="dp-vital-tile"><div class="val">' + (v6[d.key] || '—') + '</div><div class="lbl">' + d.label + '</div></div>';
+      }).join('');
+
+      var trend = patient.hba1cTrend || [];
+      var trendHtml;
+      if (trend.length) {
+        var maxVal = 10;
+        trendHtml = '<div class="dp-trend-chart">' + trend.map(function (t, idx) {
+          var isLast = idx === trend.length - 1;
+          var h = Math.min(100, (t.value / maxVal) * 100);
+          return '<div class="dp-trend-bar-wrap">' +
+            (isLast ? '<div class="dp-trend-value">' + t.value + '%</div>' : '') +
+            '<div class="dp-trend-bar' + (isLast ? ' dp-trend-bar-current' : '') + '" style="height:' + h + '%"></div>' +
+            '<div class="dp-trend-month">' + t.month + '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+      } else {
+        trendHtml = '<p class="dp-empty-note">No trend data yet.</p>';
+      }
+
+      vitalsEl.innerHTML =
+        '<div class="dp-section">' +
+          '<div class="dp-section-title">Vitals Snapshot</div>' +
+          '<div class="dp-vitals-grid">' + tiles + '</div>' +
+        '</div>' +
+        '<div class="dp-section">' +
+          '<div class="dp-section-title">HbA1c Trend (6 Months)</div>' +
+          trendHtml +
+        '</div>';
+    }
+
+    // ---- Medicines tab ----
+    var medsEl = document.getElementById('dp-tab-medicines');
+    if (medsEl) {
+      var meds = patient.medicines || [];
+      var medsHtml = meds.map(function (m) {
+        var tags = (m.timing || []).map(function (t) { return '<span class="badge badge-blue">' + timingLabel(t) + '</span>'; }).join(' ');
+        return '<div class="dp-med-item">' +
+          '<div class="med-name">' + m.name + '</div>' +
+          '<div class="med-dose">' + m.dose + ' · ' + m.frequency + ' · ' + m.adherence + '% adherence</div>' +
+          '<div class="bar-track"><div class="bar-fill ' + adherenceBarClass(m.adherence) + '" style="width:' + m.adherence + '%"></div></div>' +
+          '<div class="med-tags">' + tags + '</div>' +
+        '</div>';
+      }).join('') || '<p>No active medicines recorded.</p>';
+      medsEl.innerHTML = medsHtml +
+        '<button class="btn btn-secondary" style="width:100%;justify-content:center;margin-top:var(--space-3);" onclick="dpWriteRx()">+ Write New Rx</button>';
+    }
+
+    // ---- Timeline tab ----
+    var timelineEl = document.getElementById('dp-tab-timeline');
+    if (timelineEl) {
+      var events = patient.timeline || [];
+      timelineEl.innerHTML = events.map(function (e) {
+        return '<div class="dp-timeline-item">' +
+          '<div class="tl-icon">' + (e.icon || '•') + '</div>' +
+          '<div>' +
+            '<div class="tl-title">' + e.title + '</div>' +
+            '<div class="tl-date">' + e.date + '</div>' +
+            '<div class="tl-desc">' + e.description + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('') || '<p>No history recorded.</p>';
+    }
+
+    var panel = document.getElementById('patient-detail-panel');
+    if (panel) panel.style.right = '0';
+    var backdrop = document.getElementById('panel-backdrop');
+    if (backdrop) backdrop.style.display = 'block';
+  }
+
+  function closeDetail() {
+    var panel = document.getElementById('patient-detail-panel');
+    if (panel) panel.style.right = '-500px';
+    var backdrop = document.getElementById('panel-backdrop');
+    if (backdrop) backdrop.style.display = 'none';
+  }
+
+  function dpTab(tabElement, tabId) {
+    if (!tabElement) return;
+    var bar = tabElement.parentElement;
+    if (bar) {
+      var siblings = bar.children;
+      for (var i = 0; i < siblings.length; i++) {
+        siblings[i].classList.remove('active');
+      }
+    }
+    tabElement.classList.add('active');
+    var contents = document.querySelectorAll('.dp-tab-content');
+    for (var j = 0; j < contents.length; j++) {
+      contents[j].style.display = 'none';
+    }
+    var target = document.getElementById('dp-tab-' + tabId);
+    if (target) target.style.display = 'block';
+  }
+
+  /* ==========================================================================
+     SCREEN RENDER ENGINE (Stage 2)
+     ========================================================================== */
+  function setText(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function avgAdherence(list) {
+    if (!list.length) return 0;
+    var sum = 0;
+    for (var i = 0; i < list.length; i++) sum += list[i].adherence;
+    return Math.round(sum / list.length);
+  }
+
+  function categorizeCondition(condition) {
+    if (/diabetes/i.test(condition)) return 'Diabetes';
+    if (/coronary|hypertension|cardiac/i.test(condition)) return 'Cardiovascular';
+    if (/asthma|respiratory/i.test(condition)) return 'Respiratory';
+    if (/kidney|renal/i.test(condition)) return 'Renal';
+    return 'Endocrine & Other';
+  }
+
+  function avatarHtml(name, size) {
+    var cls = size === 'sm' ? 'avatar-circle avatar-circle-sm' : 'avatar-circle';
+    return '<div class="' + cls + '">' + getInitials(name) + '</div>';
+  }
+
+  function miniAdherenceBar(pct) {
+    return '<div class="mini-bar-wrap"><div class="bar-track"><div class="bar-fill ' + adherenceBarClass(pct) + '" style="width:' + pct + '%"></div></div><span class="mini-bar-label">' + pct + '%</span></div>';
+  }
+
+  function escapeForOnclick(str) {
+    return String(str || '').replace(/'/g, "\\'");
+  }
+
+  function patientActionButtonsHtml(p) {
+    var safeName = escapeForOnclick(p.name);
+    return '<div class="row-actions">' +
+      '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); openDetail(' + p.id + ')">View</button>' +
+      '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); openWriteRx(' + p.id + ')">Write Rx</button>' +
+      '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); toast(\'Opening chat with ' + safeName + '\', \'info\')">Message</button>' +
+    '</div>';
+  }
+
+  function dashboardPriorityRowHtml(p) {
+    return '<tr class="clickable-row" onclick="openDetail(' + p.id + ')">' +
+      '<td><div class="row-patient">' + avatarHtml(p.name, 'sm') + '<div><div class="row-patient-name">' + p.name + '</div><div class="row-patient-phone">' + p.phone + '</div></div></div></td>' +
+      '<td>' + p.condition + '</td>' +
+      '<td>' + miniAdherenceBar(p.adherence) + '</td>' +
+      '<td>' + p.lastVisit + '</td>' +
+      '<td><span class="badge ' + statusBadgeClass(p.status) + '">' + p.status + '</span></td>' +
+      '<td>' + patientActionButtonsHtml(p) + '</td>' +
+    '</tr>';
+  }
+
+  function patientsTableRowHtml(p) {
+    return '<tr class="clickable-row" onclick="openDetail(' + p.id + ')">' +
+      '<td><div class="row-patient">' + avatarHtml(p.name, 'sm') + '<div><div class="row-patient-name">' + p.name + '</div><div class="row-patient-phone">' + p.phone + '</div></div></div></td>' +
+      '<td>' + p.age + ' / ' + p.gender + '</td>' +
+      '<td><span class="badge badge-violet">' + p.condition + '</span></td>' +
+      '<td>' + miniAdherenceBar(p.adherence) + '</td>' +
+      '<td><div class="stacked-dates"><div>' + p.lastVisit + '</div><div class="muted-date">' + p.nextVisit + '</div></div></td>' +
+      '<td><span class="badge ' + statusBadgeClass(p.status) + '">' + p.status + '</span></td>' +
+      '<td>' + patientActionButtonsHtml(p) + '</td>' +
+    '</tr>';
+  }
+
+  function appointmentMiniRowHtml(a) {
+    if (!a.patientId) {
+      return '<div class="mini-schedule-row mini-schedule-open"><span class="mini-schedule-time">' + a.time + '</span><span>Open Slot</span></div>';
+    }
+    return '<div class="mini-schedule-row" onclick="openDetail(' + a.patientId + ')"><span class="mini-schedule-time">' + a.time + '</span><span>' + a.patientName + '</span></div>';
+  }
+
+  function alertRowHtml(a) {
+    var cls = a.type === 'critical' ? 'alert-critical' : (a.type === 'warning' ? 'alert-warning' : 'alert-info');
+    return '<div class="alert-row ' + cls + '">' +
+      '<span class="alert-icon">' + a.icon + '</span>' +
+      '<div><div class="alert-text">' + a.text + '</div><div class="alert-time">' + a.time + '</div></div>' +
+    '</div>';
+  }
+
+  function deltaHtml(d) {
+    if (!d) return '';
+    var arrow = d.dir === 'up' ? '▲' : '▼';
+    var cls = d.dir === 'up' ? 'trend-up' : 'trend-down';
+    return '<span class="kpi-trend ' + cls + '">' + arrow + ' ' + d.text + '</span>';
+  }
+
+  function renderDashboardScreen() {
+    var patients = window.appState.patients || [];
+    var doctor = window.appState.doctor || {};
+    var today = window.appState.dashboardToday || { rxWrittenToday: 0, missedDosesToday: 0, deltas: {} };
+
+    var greetingEl = document.getElementById('dash-greeting');
+    if (greetingEl) greetingEl.textContent = 'Good morning, ' + (doctor.name || '');
+
+    var dateClinicEl = document.getElementById('dash-date-clinic');
+    if (dateClinicEl) {
+      var now = new Date();
+      var dateStr = now.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      dateClinicEl.textContent = dateStr + ' · ' + (doctor.clinic || '');
+    }
+
+    var avgAdh = avgAdherence(patients);
+    var pendingCount = patients.filter(function (p) { return p.status === 'Report Pending'; }).length;
+
+    setText('dash-chip-adherence', avgAdh + '%');
+    setText('dash-chip-active', patients.length);
+    setText('dash-chip-rx', today.rxWrittenToday);
+    setText('dash-chip-pending', pendingCount);
+
+    var totalRx = patients.reduce(function (sum, p) { return sum + (p.medicines || []).length; }, 0);
+    var deltas = today.deltas || {};
+
+    var kpis = [
+      { label: 'Total Active Patients', value: patients.length, delta: deltas.activePatients, pct: Math.min(100, patients.length * 10), barCls: 'bar-green' },
+      { label: 'Prescription Adherence %', value: avgAdh + '%', delta: deltas.adherence, pct: avgAdh, barCls: adherenceBarClass(avgAdh) },
+      { label: 'Total Prescriptions', value: totalRx, delta: deltas.prescriptions, pct: Math.min(100, totalRx * 4), barCls: 'bar-green' },
+      { label: 'Missed Doses Today', value: today.missedDosesToday, delta: deltas.missedDoses, pct: Math.min(100, today.missedDosesToday * 10), barCls: 'bar-red' }
+    ];
+    var kpiGrid = document.getElementById('dash-kpi-grid');
+    if (kpiGrid) {
+      kpiGrid.innerHTML = kpis.map(function (k) {
+        return '<div class="stat-tile kpi-tile">' +
+          '<div class="stat-number kpi-number">' + k.value + '</div>' +
+          '<div class="stat-label">' + k.label + '</div>' +
+          deltaHtml(k.delta) +
+          '<div class="bar-track"><div class="bar-fill ' + k.barCls + '" style="width:' + k.pct + '%"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    var priorityOrder = { 'Critical': 0, 'Follow-up Due': 1, 'Report Pending': 2 };
+    var priority = patients.filter(function (p) { return p.status !== 'Active'; })
+      .sort(function (a, b) { return priorityOrder[a.status] - priorityOrder[b.status]; });
+
+    var priorityBody = document.getElementById('dash-priority-body');
+    if (priorityBody) {
+      priorityBody.innerHTML = priority.map(function (p) { return dashboardPriorityRowHtml(p); }).join('') ||
+        '<tr><td colspan="6">No priority follow-ups right now.</td></tr>';
+    }
+
+    var scheduleList = document.getElementById('dash-schedule-list');
+    if (scheduleList) {
+      var upcoming = (window.appState.appointments || []).slice(0, 5);
+      scheduleList.innerHTML = upcoming.map(function (a) { return appointmentMiniRowHtml(a); }).join('');
+    }
+
+    var alertsList = document.getElementById('dash-alerts-list');
+    if (alertsList) {
+      alertsList.innerHTML = (window.appState.recentAlerts || []).map(function (a) { return alertRowHtml(a); }).join('');
+    }
+
+    var weeklyChart = document.getElementById('dash-weekly-chart');
+    if (weeklyChart) {
+      var week = window.appState.weeklyAdherence || [];
+      var maxItem = week.reduce(function (m, d) { return d.value > m.value ? d : m; }, week[0] || { value: 0 });
+      var minItem = week.reduce(function (m, d) { return d.value < m.value ? d : m; }, week[0] || { value: 0 });
+      weeklyChart.innerHTML = week.map(function (d) {
+        var cls = d === maxItem ? 'week-bar-best' : (d === minItem ? 'week-bar-worst' : '');
+        return '<div class="week-bar-wrap">' +
+          '<div class="week-bar-value">' + d.value + '%</div>' +
+          '<div class="week-bar ' + cls + '" style="height:' + d.value + '%"></div>' +
+          '<div class="week-bar-label">' + d.day + '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    var conditionsList = document.getElementById('dash-conditions-list');
+    if (conditionsList) {
+      var groups = {};
+      patients.forEach(function (p) {
+        var cat = categorizeCondition(p.condition);
+        groups[cat] = (groups[cat] || 0) + 1;
+      });
+      var total = patients.length || 1;
+      var rows = Object.keys(groups).map(function (cat) { return { cat: cat, count: groups[cat] }; })
+        .sort(function (a, b) { return b.count - a.count; });
+      conditionsList.innerHTML = rows.map(function (r) {
+        var pct = Math.round((r.count / total) * 100);
+        return '<div class="condition-row">' +
+          '<div class="condition-label"><span>' + r.cat + '</span><span class="condition-count">' + r.count + '</span></div>' +
+          '<div class="bar-track"><div class="bar-fill bar-blue" style="width:' + pct + '%"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    var labReportsList = document.getElementById('dash-labreports-list');
+    if (labReportsList) {
+      var flagCls = { 'Critical': 'badge-red', 'Pending Review': 'badge-amber', 'Review': 'badge-blue' };
+      labReportsList.innerHTML = (window.appState.labReportsInbox || []).slice(0, 4).map(function (r) {
+        return '<div class="lab-report-row" onclick="openDetail(' + r.patientId + ')">' +
+          '<div class="lab-report-main"><div class="lab-report-name">' + r.patientName + '</div><div class="lab-report-test">' + r.testName + '</div></div>' +
+          '<span class="badge ' + (flagCls[r.flag] || 'badge-blue') + '">' + r.flag + '</span>' +
+          '<div class="lab-report-date">' + r.date + '</div>' +
+        '</div>';
+      }).join('');
+    }
+  }
+
+  function scheduleFilterChipClick(chip) {
+    var chips = document.querySelectorAll('#schedule-filter-chips .filter-chip');
+    for (var i = 0; i < chips.length; i++) chips[i].classList.remove('active');
+    chip.classList.add('active');
+    var range = chip.dataset.range;
+    if (range === 'tomorrow' || range === 'week') {
+      toast('No appointments scheduled beyond today in this preview', 'info');
+    }
+  }
+
+  function renderScheduleScreen() {
+    var appts = window.appState.appointments || [];
+    var typeClass = { 'In-person': 'badge-blue', 'Follow-up': 'badge-violet', 'Teleconsult': 'badge-green' };
+    var statusClass = { 'Confirmed': 'badge-green', 'Waiting': 'badge-amber', 'Completed': 'badge-blue' };
+
+    var tbody = document.getElementById('schedule-table-body');
+    if (tbody) {
+      tbody.innerHTML = appts.map(function (a) {
+        if (a.status === 'Open Slot') {
+          return '<tr>' +
+            '<td>' + a.time + '</td>' +
+            '<td class="open-slot-cell">Open Slot</td>' +
+            '<td>—</td><td>—</td>' +
+            '<td><span class="badge badge-open-slot">Open</span></td>' +
+            '<td><button class="btn btn-primary row-action-btn" onclick="toast(\'Opening booking for ' + a.time + '\', \'info\')">Book</button></td>' +
+          '</tr>';
+        }
+        return '<tr class="clickable-row" onclick="openDetail(' + a.patientId + ')">' +
+          '<td>' + a.time + '</td>' +
+          '<td><div class="row-patient">' + avatarHtml(a.patientName, 'sm') + '<span>' + a.patientName + '</span></div></td>' +
+          '<td><span class="badge ' + (typeClass[a.type] || 'badge-blue') + '">' + a.type + '</span></td>' +
+          '<td>' + a.notes + '</td>' +
+          '<td><span class="badge ' + (statusClass[a.status] || 'badge-blue') + '">' + a.status + '</span></td>' +
+          '<td><div class="row-actions">' +
+            '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); openDetail(' + a.patientId + ')">View</button>' +
+            '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); toast(\'Reschedule flow coming soon\', \'info\')">Reschedule</button>' +
+            '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); toast(\'Appointment cancelled (demo)\', \'warning\')">Cancel</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    var metricGrid = document.getElementById('schedule-metric-grid');
+    if (metricGrid) {
+      var confirmed = appts.filter(function (a) { return a.status === 'Confirmed'; }).length;
+      var completed = appts.filter(function (a) { return a.status === 'Completed'; }).length;
+      var openSlots = appts.filter(function (a) { return a.status === 'Open Slot'; }).length;
+      var metrics = [
+        { label: "Today's Appointments", value: appts.length },
+        { label: 'Confirmed', value: confirmed },
+        { label: 'Completed', value: completed },
+        { label: 'Open Slots', value: openSlots }
+      ];
+      metricGrid.innerHTML = metrics.map(function (m) {
+        return '<div class="stat-tile"><div class="stat-number">' + m.value + '</div><div class="stat-label">' + m.label + '</div></div>';
+      }).join('');
+    }
+
+    var notifList = document.getElementById('schedule-notifications-list');
+    if (notifList) {
+      notifList.innerHTML = (window.appState.recentAlerts || []).map(function (a) { return alertRowHtml(a); }).join('');
+    }
+  }
+
+  var patientsFilterState = { search: '', status: 'All' };
+
+  function renderPatientsScreen() {
+    var patients = window.appState.patients || [];
+    var q = patientsFilterState.search.toLowerCase();
+    var filtered = patients.filter(function (p) {
+      var matchesSearch = !q || p.name.toLowerCase().indexOf(q) !== -1 || p.phone.toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = true;
+      if (patientsFilterState.status === 'Missed Dose') {
+        matchesStatus = p.adherence < 75;
+      } else if (patientsFilterState.status !== 'All') {
+        matchesStatus = p.status === patientsFilterState.status;
+      }
+      return matchesSearch && matchesStatus;
+    });
+
+    var tbody = document.getElementById('patients-table-body');
+    if (tbody) {
+      tbody.innerHTML = filtered.map(function (p) { return patientsTableRowHtml(p); }).join('') ||
+        '<tr><td colspan="7">No patients match this filter.</td></tr>';
+    }
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function formatDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+
+  function buildNewPatientFromForm() {
+    var firstName = document.getElementById('add-first-name').value.trim();
+    var lastName = document.getElementById('add-last-name').value.trim();
+    var mobile = document.getElementById('add-mobile').value.trim();
+    var age = Number(document.getElementById('add-age').value) || null;
+    var gender = document.getElementById('add-gender').value;
+    var bloodGroup = document.getElementById('add-blood-group').value;
+    var height = parseFloat(document.getElementById('add-height').value);
+    var weight = parseFloat(document.getElementById('add-weight').value);
+    var emergencyContact = document.getElementById('add-emergency-contact').value.trim();
+    var allergiesRaw = document.getElementById('add-allergies').value.trim();
+    var conditionsRaw = document.getElementById('add-conditions').value.trim();
+    var medsRaw = document.getElementById('add-medications').value.trim();
+    var abhaId = document.getElementById('add-abha').value.trim();
+
+    var today = new Date();
+    var nextVisitDate = new Date(today.getTime() + 30 * 86400000);
+
+    var allergies = allergiesRaw ? allergiesRaw.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    var medicines = medsRaw ? medsRaw.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).map(function (name) {
+      return { name: name, dose: '—', frequency: '—', timing: [], adherence: 100 };
+    }) : [];
+
+    var bmi = '—';
+    if (height && weight) {
+      var heightM = height / 100;
+      bmi = (weight / (heightM * heightM)).toFixed(1);
+    }
+
+    var patients = window.appState.patients;
+    var nextId = 1 + patients.reduce(function (max, p) { return Math.max(max, p.id); }, 0);
+
+    return {
+      id: nextId,
+      name: (firstName + ' ' + lastName).trim(),
+      age: age,
+      gender: gender,
+      phone: '+91 ' + mobile,
+      condition: conditionsRaw || 'General Checkup',
+      adherence: 100,
+      lastVisit: formatDate(today),
+      nextVisit: formatDate(nextVisitDate),
+      status: 'Active',
+      vitals: { fbs: '—', bp: '—', hba1c: '—', bmi: bmi, weight: weight ? (weight + ' kg') : '—', spo2: '—' },
+      allergies: allergies,
+      medicines: medicines,
+      timeline: [{ date: formatDate(today), title: 'Patient Registered', icon: '📝', description: 'New patient record created via Add Patient form.' }],
+      bloodGroup: bloodGroup,
+      emergencyContact: emergencyContact,
+      abhaId: abhaId,
+      hba1cTrend: []
+    };
+  }
+
+  function resetAddPatientForm() {
+    ['add-first-name', 'add-last-name', 'add-mobile', 'add-age', 'add-emergency-contact', 'add-allergies', 'add-conditions', 'add-medications', 'add-abha', 'add-height', 'add-weight'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+
+  function validateAddPatientForm() {
+    var firstName = document.getElementById('add-first-name').value.trim();
+    var mobile = document.getElementById('add-mobile').value.trim();
+    if (!firstName || !mobile) {
+      toast("Please fill in the patient's name and mobile number", 'error');
+      return false;
+    }
+    return true;
+  }
+
+  /* ==========================================================================
+     WRITE PRESCRIPTION ENGINE (Stage 3)
+     ========================================================================== */
+  var rxDraft = { patientId: null, drugs: [], tests: [] };
+
+  function openWriteRx(patientId) {
+    rxDraft = { patientId: patientId || null, drugs: [], tests: [] };
+    go('write-rx');
+  }
+
+  function defaultTestsForCondition(condition) {
+    var cat = categorizeCondition(condition);
+    var map = {
+      'Diabetes': ['HbA1c', 'Fasting Lipid Profile'],
+      'Cardiovascular': ['ECG', 'Lipid Profile'],
+      'Renal': ['Serum Creatinine', 'eGFR'],
+      'Respiratory': ['Spirometry'],
+      'Endocrine & Other': ['Relevant Hormone Panel']
+    };
+    return (map[cat] || []).slice();
+  }
+
+  function rebuildRxPatientOptions() {
+    var select = document.getElementById('rx-patient-select');
+    if (!select) return;
+    var patients = window.appState.patients || [];
+    select.innerHTML = '<option value="">Select a patient…</option>' + patients.map(function (p) {
+      return '<option value="' + p.id + '">' + p.name + '</option>';
+    }).join('');
+    select.value = rxDraft.patientId || '';
+  }
+
+  function renderRxMedicinesTable() {
+    var tbody = document.getElementById('rx-medicines-body');
+    if (tbody) {
+      tbody.innerHTML = rxDraft.drugs.map(function (d, idx) {
+        var tags = (d.timing || []).map(function (t) { return '<span class="badge badge-blue">' + timingLabel(t) + '</span>'; }).join(' ');
+        return '<tr>' +
+          '<td>' + d.name + '</td>' +
+          '<td>' + d.dose + '</td>' +
+          '<td>' + d.frequency + '</td>' +
+          '<td>' + tags + '</td>' +
+          '<td>' + d.duration + '</td>' +
+          '<td>' + (d.notes || '—') + '</td>' +
+          '<td><button type="button" class="btn btn-ghost row-action-btn" data-idx="' + idx + '" onclick="removeMedicineFromTable(this)">✕</button></td>' +
+        '</tr>';
+      }).join('') || '<tr><td colspan="7">No medicines added yet.</td></tr>';
+    }
+    renderRxInteractionCheck();
+  }
+
+  function addMedicineToTable(medData) {
+    rxDraft.drugs.push(medData);
+    renderRxMedicinesTable();
+    toast('Medicine added to prescription', 'success');
+  }
+
+  function removeMedicineFromTable(buttonEl) {
+    var idx = parseInt(buttonEl.getAttribute('data-idx'), 10);
+    rxDraft.drugs.splice(idx, 1);
+    renderRxMedicinesTable();
+    toast('Medicine removed', 'info');
+  }
+
+  function renderRxInteractionCheck() {
+    var el = document.getElementById('rx-interaction-check');
+    if (!el) return;
+    var count = rxDraft.drugs.length;
+    el.innerHTML =
+      '<div class="dp-alert-box dp-alert-ok">✓ No major drug-drug interactions detected</div>' +
+      '<p class="interaction-meta">Checked ' + count + ' medicine' + (count === 1 ? '' : 's') + ' · Last checked just now</p>';
+  }
+
+  function toggleAddMedicineForm(show) {
+    var form = document.getElementById('rx-add-medicine-form');
+    if (!form) return;
+    if (show === undefined) show = form.style.display === 'none';
+    form.style.display = show ? 'block' : 'none';
+  }
+
+  function resetAddMedicineForm() {
+    ['rx-med-name', 'rx-med-dose', 'rx-med-duration', 'rx-med-notes'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    var freqEl = document.getElementById('rx-med-frequency');
+    if (freqEl) freqEl.value = 'Once daily';
+    var chips = document.querySelectorAll('#rx-add-medicine-form .timing-toggle-chip.selected');
+    for (var i = 0; i < chips.length; i++) chips[i].classList.remove('selected');
+  }
+
+  function submitAddMedicine() {
+    var name = document.getElementById('rx-med-name').value.trim();
+    var dose = document.getElementById('rx-med-dose').value.trim();
+    var frequency = document.getElementById('rx-med-frequency').value;
+    var duration = document.getElementById('rx-med-duration').value.trim();
+    var notes = document.getElementById('rx-med-notes').value.trim();
+    if (!name || !dose) {
+      toast('Please enter at least a drug name and dose', 'error');
+      return;
+    }
+    var timingChips = document.querySelectorAll('#rx-add-medicine-form .timing-toggle-chip.selected');
+    var timing = [];
+    for (var i = 0; i < timingChips.length; i++) timing.push(timingChips[i].dataset.timing);
+    addMedicineToTable({ name: name, dose: dose, frequency: frequency, timing: timing, duration: duration || '30 days', notes: notes });
+    resetAddMedicineForm();
+    toggleAddMedicineForm(false);
+  }
+
+  function renderRxTestsList() {
+    var el = document.getElementById('rx-tests-list');
+    if (!el) return;
+    el.innerHTML = rxDraft.tests.map(function (t, idx) {
+      return '<span class="pill-tag">' + t + ' <button type="button" class="pill-remove" data-idx="' + idx + '" onclick="removeRxTest(this)">✕</button></span>';
+    }).join('') || '<span class="dp-empty-note">No tests ordered yet.</span>';
+  }
+
+  function addRxTest() {
+    var input = document.getElementById('rx-test-input');
+    if (!input) return;
+    var val = input.value.trim();
+    if (!val) return;
+    rxDraft.tests.push(val);
+    input.value = '';
+    renderRxTestsList();
+  }
+
+  function removeRxTest(buttonEl) {
+    var idx = parseInt(buttonEl.getAttribute('data-idx'), 10);
+    rxDraft.tests.splice(idx, 1);
+    renderRxTestsList();
+  }
+
+  function renderRxPatientContext(patient) {
+    var v = patient.vitals || {};
+
+    var demographicsEl = document.getElementById('rx-patient-demographics');
+    if (demographicsEl) {
+      demographicsEl.innerHTML =
+        '<div class="rx-demo-item"><span class="rx-demo-label">Age</span><span>' + patient.age + '</span></div>' +
+        '<div class="rx-demo-item"><span class="rx-demo-label">Gender</span><span>' + patient.gender + '</span></div>' +
+        '<div class="rx-demo-item"><span class="rx-demo-label">Weight</span><span>' + (v.weight || '—') + '</span></div>' +
+        '<div class="rx-demo-item"><span class="rx-demo-label">BP</span><span>' + (v.bp || '—') + '</span></div>';
+    }
+
+    var allergyEl = document.getElementById('rx-allergy-alert');
+    if (allergyEl) {
+      allergyEl.innerHTML = (patient.allergies && patient.allergies.length)
+        ? '<div class="rx-allergy-box">🚨 Known Allergies: ' + patient.allergies.join(', ') + '</div>'
+        : '<div class="dp-alert-box dp-alert-ok">✓ No known allergies</div>';
+    }
+
+    var vitalsStripEl = document.getElementById('rx-vitals-strip');
+    if (vitalsStripEl) {
+      var stripDefs = [
+        { key: 'fbs', label: 'FBS' }, { key: 'bp', label: 'BP' },
+        { key: 'hba1c', label: 'HbA1c' }, { key: 'bmi', label: 'BMI' }, { key: 'spo2', label: 'SpO2' }
+      ];
+      vitalsStripEl.innerHTML = stripDefs.map(function (d) {
+        return '<div class="rx-vital-chip"><span class="rx-vital-chip-val">' + (v[d.key] || '—') + '</span><span class="rx-vital-chip-lbl">' + d.label + '</span></div>';
+      }).join('');
+    }
+
+    var chiefComplaintEl = document.getElementById('rx-chief-complaint');
+    if (chiefComplaintEl && !chiefComplaintEl.value) {
+      chiefComplaintEl.value = 'Follow-up consultation for ' + patient.condition + '.';
+    }
+
+    if (!rxDraft.drugs.length) {
+      rxDraft.drugs = (patient.medicines || []).map(function (m) {
+        return { name: m.name, dose: m.dose, frequency: m.frequency, timing: (m.timing || []).slice(), duration: '30 days', notes: '' };
+      });
+    }
+    if (!rxDraft.tests.length) {
+      rxDraft.tests = defaultTestsForCondition(patient.condition);
+    }
+
+    var followUpEl = document.getElementById('rx-followup-date');
+    if (followUpEl && !followUpEl.value) {
+      followUpEl.value = formatDate(new Date(Date.now() + 30 * 86400000));
+    }
+    var instructionsEl = document.getElementById('rx-instructions');
+    if (instructionsEl && !instructionsEl.value) {
+      instructionsEl.value = 'Continue prescribed medication as directed. Maintain a balanced diet, stay hydrated, and monitor symptoms. Contact the clinic if symptoms worsen.';
+    }
+  }
+
+  function renderWriteRxScreen() {
+    rebuildRxPatientOptions();
+    var patient = findPatientById(rxDraft.patientId);
+    if (patient) {
+      renderRxPatientContext(patient);
+    } else {
+      var demographicsEl = document.getElementById('rx-patient-demographics');
+      if (demographicsEl) demographicsEl.innerHTML = '<p class="dp-empty-note">Select a patient to load their details.</p>';
+      var allergyEl = document.getElementById('rx-allergy-alert');
+      if (allergyEl) allergyEl.innerHTML = '';
+      var vitalsStripEl = document.getElementById('rx-vitals-strip');
+      if (vitalsStripEl) vitalsStripEl.innerHTML = '';
+      if (!rxDraft.drugs.length) {
+        rxDraft.drugs = [
+          { name: 'Metformin', dose: '500mg', frequency: 'Twice daily', timing: ['Morning', 'After Food'], duration: '30 days', notes: '' },
+          { name: 'Telmisartan', dose: '40mg', frequency: 'Once daily', timing: ['Morning', 'Before Food'], duration: '30 days', notes: '' }
+        ];
+      }
+    }
+    renderRxMedicinesTable();
+    renderRxTestsList();
+  }
+
+  function signAndSendRx() {
+    if (!rxDraft.patientId) {
+      toast('Please select a patient first', 'error');
+      return;
+    }
+    if (!rxDraft.drugs.length) {
+      toast('Add at least one medicine before signing', 'error');
+      return;
+    }
+    var patient = findPatientById(rxDraft.patientId);
+    if (!patient) return;
+    var today = new Date();
+    var newRx = {
+      id: nextRxId(),
+      patientId: patient.id,
+      patientName: patient.name,
+      diagnosis: (document.getElementById('rx-diagnosis').value || '').trim() || 'General Consultation',
+      chiefComplaint: (document.getElementById('rx-chief-complaint').value || '').trim(),
+      drugs: rxDraft.drugs.slice(),
+      tests: rxDraft.tests.slice(),
+      followUpDate: document.getElementById('rx-followup-date').value,
+      instructions: (document.getElementById('rx-instructions').value || '').trim(),
+      issueDate: formatDate(today),
+      validityDate: formatDate(new Date(today.getTime() + 30 * 86400000))
+    };
+    window.appState.prescriptions.push(newRx);
+
+    patient.lastVisit = newRx.issueDate;
+    patient.medicines = newRx.drugs.map(function (d) {
+      return { name: d.name, dose: d.dose, frequency: d.frequency, timing: (d.timing || []).slice(), adherence: 100 };
+    });
+
+    toast('Prescription signed & sent to patient!', 'success');
+    setTimeout(function () {
+      loadPrescriptionDetail(newRx.id);
+      go('prescription-detail');
+    }, 800);
+  }
+
+  function buildDraftRxObject() {
+    var patient = findPatientById(rxDraft.patientId);
+    return {
+      id: nextRxId() + '-DRAFT',
+      patientId: rxDraft.patientId,
+      patientName: patient ? patient.name : 'Unselected Patient',
+      diagnosis: (document.getElementById('rx-diagnosis').value || '').trim() || '—',
+      chiefComplaint: (document.getElementById('rx-chief-complaint').value || '').trim() || '—',
+      drugs: rxDraft.drugs,
+      tests: rxDraft.tests,
+      followUpDate: document.getElementById('rx-followup-date').value,
+      instructions: (document.getElementById('rx-instructions').value || '').trim() || '—',
+      issueDate: formatDate(new Date())
+    };
+  }
+
+  function printDraftRx() {
+    if (!rxDraft.patientId) {
+      toast('Select a patient before printing', 'error');
+      return;
+    }
+    renderPrintableRx(buildDraftRxObject(), { isDraft: true });
+    window.print();
+  }
+
+  /* ==========================================================================
+     PRESCRIPTION HISTORY & DETAIL ENGINE (Stage 3)
+     ========================================================================== */
+  var rxHistoryFilterState = { search: '', status: 'All' };
+  var currentRxId = null;
+
+  function findPrescriptionById(id) {
+    var list = window.appState.prescriptions || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function prescriptionStatus(rx) {
+    var days = Math.floor((new Date(rx.validityDate) - new Date()) / 86400000);
+    if (days < 0) return 'Completed';
+    if (days <= 7) return 'Expiring Soon';
+    return 'Active';
+  }
+
+  function statusBadgeClassForRx(status) {
+    if (status === 'Active') return 'badge-green';
+    if (status === 'Expiring Soon') return 'badge-amber';
+    return 'badge-blue';
+  }
+
+  function nextRxId() {
+    var nums = (window.appState.prescriptions || []).map(function (rx) {
+      return parseInt(rx.id.split('-')[2], 10);
+    });
+    var max = nums.length ? Math.max.apply(null, nums) : 8800;
+    return 'RX-2026-' + (max + 1);
+  }
+
+  function drugsSummary(rx) {
+    return (rx.drugs || []).map(function (d) { return d.name; }).join(', ') || '—';
+  }
+
+  function rxHistoryRowHtml(rx) {
+    var status = prescriptionStatus(rx);
+    return '<tr class="clickable-row" onclick="viewPrescription(\'' + rx.id + '\')">' +
+      '<td class="mono-cell">' + rx.id + '</td>' +
+      '<td><div class="row-patient">' + avatarHtml(rx.patientName, 'sm') + '<span>' + rx.patientName + '</span></div></td>' +
+      '<td>' + rx.diagnosis + '</td>' +
+      '<td class="rx-drugs-summary">' + drugsSummary(rx) + '</td>' +
+      '<td>' + rx.issueDate + '</td>' +
+      '<td>' + rx.validityDate + '</td>' +
+      '<td><span class="badge ' + statusBadgeClassForRx(status) + '">' + status + '</span></td>' +
+      '<td><div class="row-actions">' +
+        '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); viewPrescription(\'' + rx.id + '\')">View</button>' +
+        '<button class="btn btn-ghost row-action-btn" onclick="event.stopPropagation(); printPrescription(\'' + rx.id + '\')">Print</button>' +
+      '</div></td>' +
+    '</tr>';
+  }
+
+  function renderRxHistoryScreen() {
+    var list = (window.appState.prescriptions || []).slice().sort(function (a, b) { return new Date(b.issueDate) - new Date(a.issueDate); });
+    var q = rxHistoryFilterState.search.toLowerCase();
+    var filtered = list.filter(function (rx) {
+      var matchesSearch = !q || rx.id.toLowerCase().indexOf(q) !== -1 || rx.patientName.toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = rxHistoryFilterState.status === 'All' || prescriptionStatus(rx) === rxHistoryFilterState.status;
+      return matchesSearch && matchesStatus;
+    });
+    var tbody = document.getElementById('rx-history-table-body');
+    if (tbody) {
+      tbody.innerHTML = filtered.map(function (rx) { return rxHistoryRowHtml(rx); }).join('') ||
+        '<tr><td colspan="8">No prescriptions match this filter.</td></tr>';
+    }
+  }
+
+  function viewPrescription(rxId) {
+    loadPrescriptionDetail(rxId);
+    go('prescription-detail');
+  }
+
+  function printPrescription(rxId) {
+    loadPrescriptionDetail(rxId);
+    window.print();
+  }
+
+  function verificationCode(rxId) {
+    return btoa(rxId).replace(/=/g, '').toUpperCase();
+  }
+
+  function renderPrintableRx(rx, opts) {
+    opts = opts || {};
+    var patient = findPatientById(rx.patientId) || {};
+    var doctor = window.appState.doctor || {};
+    var v = patient.vitals || {};
+
+    setText('rx-print-doctor-name', doctor.name || '');
+    setText('rx-print-doctor-qual', doctor.qualifications || '');
+    setText('rx-print-doctor-reg', 'Reg. No. ' + (doctor.license || ''));
+    setText('rx-print-clinic-address', doctor.address || '');
+    setText('rx-print-clinic-contact', doctor.contact || '');
+    setText('rx-print-rx-id', rx.id);
+    setText('rx-print-date', rx.issueDate);
+
+    setText('rx-print-patient-name', patient.name || '—');
+    setText('rx-print-patient-age-gender', (patient.age || '—') + ' yrs · ' + (patient.gender || '—'));
+    setText('rx-print-patient-weight', v.weight || '—');
+    setText('rx-print-patient-bp', v.bp || '—');
+    setText('rx-print-consult-date', rx.issueDate);
+
+    var allergyEl = document.getElementById('rx-print-allergy-box');
+    if (allergyEl) {
+      var hasAllergies = patient.allergies && patient.allergies.length;
+      allergyEl.innerHTML = hasAllergies
+        ? '⚠ Known Allergies: ' + patient.allergies.join(', ')
+        : '✓ No known allergies reported';
+      allergyEl.className = 'rx-print-allergy-box ' + (hasAllergies ? 'rx-print-allergy-warning' : 'rx-print-allergy-ok');
+    }
+
+    setText('rx-print-complaint', rx.chiefComplaint || '—');
+    setText('rx-print-diagnosis', rx.diagnosis || '—');
+
+    var medsBody = document.getElementById('rx-print-medicines-body');
+    if (medsBody) {
+      medsBody.innerHTML = (rx.drugs || []).map(function (d) {
+        var tags = (d.timing || []).map(function (t) { return timingLabel(t); }).join(', ') || '—';
+        return '<tr>' +
+          '<td>' + d.name + '</td><td>' + d.dose + '</td><td>' + d.frequency + '</td>' +
+          '<td>' + tags + '</td><td>' + d.duration + '</td><td>' + (d.notes || '—') + '</td>' +
+        '</tr>';
+      }).join('') || '<tr><td colspan="6">No medicines prescribed.</td></tr>';
+    }
+
+    var testsEl = document.getElementById('rx-print-tests');
+    if (testsEl) {
+      testsEl.textContent = (rx.tests && rx.tests.length) ? rx.tests.join(', ') : 'None ordered';
+    }
+
+    setText('rx-print-instructions', rx.instructions || '—');
+    setText('rx-print-followup', rx.followUpDate ? ('Follow-up on: ' + rx.followUpDate) : 'No follow-up scheduled');
+
+    setText('rx-print-verification', 'Verification Code: ' + verificationCode(rx.id));
+    setText('rx-print-signature-name', doctor.name || '');
+    setText('rx-print-signature-reg', 'Reg. No. ' + (doctor.license || ''));
+
+    var draftBadge = document.getElementById('rx-print-draft-badge');
+    if (draftBadge) draftBadge.style.display = opts.isDraft ? 'inline-block' : 'none';
+  }
+
+  function loadPrescriptionDetail(rxId) {
+    currentRxId = rxId;
+    var rx = findPrescriptionById(rxId);
+    if (!rx) return;
+    renderPrintableRx(rx, { isDraft: false });
+  }
+
+  function renderPrescriptionDetailScreen() {
+    if (!currentRxId) return;
+    var rx = findPrescriptionById(currentRxId);
+    if (rx) renderPrintableRx(rx, { isDraft: false });
+  }
+
+  /* ==========================================================================
+     LAB REPORTS INBOX ENGINE (Stage 4)
+     ========================================================================== */
+  var labReportsFilterState = { filter: 'Unreviewed' };
+
+  function labParamClass(status) {
+    var map = { 'High': 'param-high', 'Critical': 'param-critical', 'Low': 'param-low', 'Borderline': 'param-borderline', 'Normal': 'param-normal' };
+    return map[status] || 'param-normal';
+  }
+
+  function labReportCardHtml(r) {
+    var statusCls = 'status-' + r.resultStatus.toLowerCase();
+    var flagBadgeCls = { 'Critical': 'badge-red', 'Borderline': 'badge-amber', 'Normal': 'badge-green' }[r.resultStatus] || 'badge-blue';
+    var params = (r.parameters || []).map(function (p) {
+      return '<div class="lab-param-tile ' + labParamClass(p.status) + '">' +
+        '<div class="param-value">' + p.value + '</div>' +
+        '<div class="param-name">' + p.name + ' <span class="badge ' + (flagBadgeCls) + '" style="margin-left:4px;">' + p.status + '</span></div>' +
+        '<div class="param-range">Ref: ' + p.range + '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="lab-report-card ' + statusCls + (r.flaggedUrgent ? ' flagged-urgent' : '') + '" id="lab-card-' + r.id + '">' +
+      '<div class="lab-report-card-header">' +
+        '<div class="lab-report-card-title-group">' +
+          '<div class="lab-report-icon-circle">🧪</div>' +
+          '<div>' +
+            '<div class="lab-report-title">' + r.testName + '</div>' +
+            '<div class="lab-report-subtitle">' + r.patientName + ' · Patient</div>' +
+            '<div class="lab-report-meta">' + r.sourceLab + ' · ' + r.uploadTime + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="lab-report-card-actions">' +
+          '<span class="badge ' + flagBadgeCls + '">' + r.resultStatus + '</span>' +
+          '<button class="btn btn-secondary" onclick="toggleFlagUrgent(' + r.id + ')">' + (r.flaggedUrgent ? '✓ Flagged' : 'Flag Urgent') + '</button>' +
+          '<button class="btn btn-secondary reviewed-btn' + (r.reviewed ? ' is-reviewed' : '') + '" onclick="markReportReviewed(' + r.id + ')">' + (r.reviewed ? '✓ Reviewed' : 'Mark Reviewed') + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="lab-report-params-grid">' + params + '</div>' +
+      '<div class="lab-report-card-footer">' +
+        '<button class="btn btn-primary" onclick="openWriteRx(' + r.patientId + ')">Write Revised Rx</button>' +
+        '<button class="btn btn-secondary" onclick="go(\'messages\')">Message Patient</button>' +
+        '<button class="btn btn-secondary" onclick="go(\'schedule\')">Schedule Visit</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderLabReportsScreen() {
+    var all = window.appState.labReportsInbox || [];
+    var unreviewedCount = all.filter(function (r) { return !r.reviewed; }).length;
+
+    var badge = document.getElementById('lab-unreviewed-badge');
+    if (badge) badge.textContent = unreviewedCount + ' Unreviewed';
+
+    var banner = document.getElementById('lab-critical-banner');
+    if (banner) {
+      var mostCritical = all.filter(function (r) { return r.resultStatus === 'Critical' && !r.reviewed; })
+        .sort(function (a, b) { return new Date(b.date) - new Date(a.date); })[0];
+      if (mostCritical) {
+        var mainParam = (mostCritical.parameters || [])[0];
+        banner.style.display = 'block';
+        banner.textContent = '⚠ CRITICAL: ' + mostCritical.patientName + ' — ' + mostCritical.testName +
+          (mainParam ? (' ' + mainParam.value + ' (' + mainParam.status + ')') : '') + ' — immediate review recommended.';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    var filter = labReportsFilterState.filter;
+    var filtered = all.filter(function (r) {
+      if (filter === 'Unreviewed') return !r.reviewed;
+      if (filter === 'Critical') return r.resultStatus === 'Critical';
+      if (filter === 'Normal') return r.resultStatus === 'Normal';
+      return true;
+    });
+
+    var list = document.getElementById('lab-reports-list');
+    if (list) {
+      list.innerHTML = filtered.map(function (r) { return labReportCardHtml(r); }).join('') ||
+        '<p class="dp-empty-note">No reports match this filter.</p>';
+    }
+  }
+
+  function findLabReportById(id) {
+    var list = window.appState.labReportsInbox || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function markReportReviewed(id) {
+    var r = findLabReportById(id);
+    if (!r || r.reviewed) return;
+    r.reviewed = true;
+    (window.appState.notifications || []).forEach(function (n) {
+      if (n.category === 'lab' && n.patientId === r.patientId && !n.read) n.read = true;
+    });
+    renderLabReportsScreen();
+    syncNotifDots();
+    toast('Report marked as reviewed', 'success');
+  }
+
+  function toggleFlagUrgent(id) {
+    var r = findLabReportById(id);
+    if (!r) return;
+    r.flaggedUrgent = !r.flaggedUrgent;
+    renderLabReportsScreen();
+    toast(r.flaggedUrgent ? 'Report flagged as urgent' : 'Urgent flag removed', 'warning');
+  }
+
+  /* ==========================================================================
+     MESSAGES ENGINE (Stage 4)
+     ========================================================================== */
+  var activeConversationId = null;
+  var conversationsSearchTerm = '';
+
+  function findConversationById(id) {
+    var list = window.appState.conversations || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function conversationUnreadCount(conv) {
+    return (conv.messages || []).filter(function (m) { return m.from === 'patient' && !m.read; }).length;
+  }
+
+  function conversationListItemHtml(conv) {
+    var patient = findPatientById(conv.patientId) || {};
+    var lastMsg = (conv.messages || [])[conv.messages.length - 1] || {};
+    var unread = conversationUnreadCount(conv);
+    return '<div class="conversation-item' + (conv.id === activeConversationId ? ' active' : '') + '" onclick="selectConversation(' + conv.id + ')">' +
+      avatarHtml(patient.name, 'sm') +
+      '<div class="conversation-item-body">' +
+        '<div class="conversation-item-top">' +
+          '<span class="conversation-item-name">' + (patient.name || 'Unknown') + '</span>' +
+          '<span class="conversation-item-time">' + (lastMsg.time || '') + '</span>' +
+        '</div>' +
+        '<div class="conversation-item-preview">' + (lastMsg.text || '') + '</div>' +
+      '</div>' +
+      (unread ? '<span class="conversation-unread-badge">' + unread + '</span>' : '') +
+    '</div>';
+  }
+
+  function renderConversationList() {
+    var listEl = document.getElementById('conversation-list');
+    if (!listEl) return;
+    var q = conversationsSearchTerm.toLowerCase();
+    var convs = (window.appState.conversations || []).filter(function (conv) {
+      if (!q) return true;
+      var patient = findPatientById(conv.patientId);
+      return patient && patient.name.toLowerCase().indexOf(q) !== -1;
+    });
+    listEl.innerHTML = convs.map(function (c) { return conversationListItemHtml(c); }).join('') ||
+      '<p class="dp-empty-note" style="padding: var(--space-4);">No conversations found.</p>';
+  }
+
+  function chatBubbleHtml(m) {
+    var receipt = m.from === 'doctor' ? (m.read ? ' ✓✓' : ' ✓') : '';
+    return '<div class="chat-bubble ' + (m.from === 'doctor' ? 'outgoing' : 'incoming') + '">' +
+      '<div>' + m.text + '</div>' +
+      '<div class="chat-bubble-time">' + m.time + receipt + '</div>' +
+    '</div>';
+  }
+
+  function renderChatPane() {
+    var conv = findConversationById(activeConversationId);
+    var nameEl = document.getElementById('chat-header-name');
+    var avatarEl = document.getElementById('chat-header-avatar');
+    var conditionEl = document.getElementById('chat-header-condition');
+    var dotEl = document.getElementById('chat-header-online-dot');
+    var bannerEl = document.getElementById('chat-lab-banner');
+    var threadEl = document.getElementById('chat-thread');
+
+    if (!conv) {
+      if (nameEl) nameEl.textContent = 'Select a conversation';
+      if (avatarEl) avatarEl.textContent = '—';
+      if (conditionEl) conditionEl.textContent = '';
+      if (bannerEl) bannerEl.style.display = 'none';
+      if (threadEl) threadEl.innerHTML = '';
+      return;
+    }
+
+    var patient = findPatientById(conv.patientId) || {};
+    if (nameEl) nameEl.textContent = patient.name || 'Unknown';
+    if (avatarEl) avatarEl.textContent = getInitials(patient.name);
+    if (conditionEl) conditionEl.textContent = patient.condition || '';
+    if (dotEl) dotEl.className = 'online-dot' + (conv.online ? '' : ' offline');
+
+    if (bannerEl) {
+      var report = (window.appState.labReportsInbox || []).filter(function (r) { return r.patientId === conv.patientId; })[0];
+      if (report) {
+        bannerEl.style.display = 'block';
+        bannerEl.textContent = '⚠ Recent lab report available: ' + report.testName + ' (' + report.resultStatus + ') — click to view';
+        bannerEl.onclick = function () { go('lab-reports'); };
+      } else {
+        bannerEl.style.display = 'none';
+      }
+    }
+
+    if (threadEl) {
+      threadEl.innerHTML = (conv.messages || []).map(function (m) { return chatBubbleHtml(m); }).join('');
+      threadEl.scrollTop = threadEl.scrollHeight;
+    }
+  }
+
+  function selectConversation(id) {
+    activeConversationId = id;
+    var conv = findConversationById(id);
+    if (conv) {
+      (conv.messages || []).forEach(function (m) { if (m.from === 'patient') m.read = true; });
+    }
+    renderConversationList();
+    renderChatPane();
+    syncNotifDots();
+  }
+
+  function renderMessagesScreen() {
+    if (activeConversationId === null) {
+      var first = (window.appState.conversations || [])[0];
+      activeConversationId = first ? first.id : null;
+    }
+    renderConversationList();
+    renderChatPane();
+  }
+
+  function sendMessage() {
+    var input = document.getElementById('chat-message-input');
+    if (!input) return;
+    var text = input.value.trim();
+    if (!text) return;
+    var conv = findConversationById(activeConversationId);
+    if (!conv) {
+      toast('Select a conversation first', 'error');
+      return;
+    }
+    var now = new Date();
+    var hours = now.getHours();
+    var minutes = pad2(now.getMinutes());
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    var hour12 = hours % 12 || 12;
+    conv.messages.push({ from: 'doctor', text: text, time: hour12 + ':' + minutes + ' ' + ampm, read: false });
+    input.value = '';
+    renderConversationList();
+    renderChatPane();
+    toast('Message sent', 'info');
+  }
+
+  function chatWriteRx() {
+    var conv = findConversationById(activeConversationId);
+    if (!conv) return;
+    openWriteRx(conv.patientId);
+  }
+
+  function chatViewProfile() {
+    var conv = findConversationById(activeConversationId);
+    if (!conv) return;
+    openDetail(conv.patientId);
+  }
+
+  /* ==========================================================================
+     NOTIFICATIONS ENGINE (Stage 4)
+     ========================================================================== */
+  var notifFilterState = { filter: 'All' };
+
+  function notifTypeClass(type) { return 'type-' + type; }
+
+  function notifItemHtml(n) {
+    return '<div class="notif-item' + (n.read ? '' : ' unread') + '" onclick="notificationClick(' + n.id + ')">' +
+      '<div class="notif-icon-circle ' + notifTypeClass(n.type) + '">' + n.icon + '</div>' +
+      '<div class="notif-body">' +
+        '<div class="notif-top-row"><span class="notif-title">' + n.title + '</span><span class="notif-time">' + n.time + '</span></div>' +
+        '<div class="notif-desc">' + n.description + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderNotificationsScreen() {
+    var all = window.appState.notifications || [];
+    var filter = notifFilterState.filter;
+    var filtered = all.filter(function (n) {
+      if (filter === 'All') return true;
+      if (filter === 'Critical') return n.type === 'critical';
+      return n.category === filter;
+    });
+    var feed = document.getElementById('notif-feed');
+    if (feed) {
+      feed.innerHTML = filtered.map(function (n) { return notifItemHtml(n); }).join('') ||
+        '<p class="dp-empty-note">No notifications match this filter.</p>';
+    }
+  }
+
+  function findNotificationById(id) {
+    var list = window.appState.notifications || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function notificationClick(id) {
+    var n = findNotificationById(id);
+    if (!n) return;
+    n.read = true;
+    if (n.patientId) openDetail(n.patientId);
+    renderNotificationsScreen();
+    syncNotifDots();
+  }
+
+  function markAllNotificationsRead() {
+    (window.appState.notifications || []).forEach(function (n) { n.read = true; });
+    renderNotificationsScreen();
+    syncNotifDots();
+    toast('All notifications marked as read', 'info');
+  }
+
+  /* ==========================================================================
+     PROFILE & SETTINGS ENGINE (Stage 4)
+     ========================================================================== */
+  function renderProfileScreen() {
+    var doctor = window.appState.doctor || {};
+    var patients = window.appState.patients || [];
+
+    setText('profile-hero-name', doctor.name || '');
+    setText('profile-hero-quals', (doctor.qualifications || '') + ' · Reg. No. ' + (doctor.license || ''));
+    setText('profile-hero-clinic', doctor.clinic || '');
+    setText('profile-hero-tier', doctor.tier || '');
+    var avatarEl = document.getElementById('profile-hero-avatar');
+    if (avatarEl) avatarEl.textContent = getInitials(doctor.name);
+
+    var statsRow = document.getElementById('profile-stats-row');
+    if (statsRow) {
+      var stats = [
+        { label: 'Active Patients', value: patients.length },
+        { label: 'Avg. Adherence', value: avgAdherence(patients) + '%' },
+        { label: 'Total Rx', value: (window.appState.prescriptions || []).length },
+        { label: 'Rating', value: (doctor.rating || 0) + '★' },
+        { label: 'Yrs Experience', value: doctor.experienceYears || 0 }
+      ];
+      statsRow.innerHTML = stats.map(function (s) {
+        return '<div class="stat-tile"><div class="stat-number">' + s.value + '</div><div class="stat-label">' + s.label + '</div></div>';
+      }).join('');
+    }
+
+    setInputValue('profile-clinic-name', doctor.clinic);
+    setInputValue('profile-clinic-address', doctor.address);
+    setInputValue('profile-clinic-phone', doctor.phone);
+    setInputValue('profile-clinic-email', doctor.email);
+    setInputValue('profile-clinic-hours', doctor.operatingHours);
+
+    var toggleDefs = [
+      { key: 'criticalLabAlerts', label: 'Critical Lab Alerts' },
+      { key: 'missedDoseAlerts', label: 'Missed-Dose Alerts' },
+      { key: 'weeklyAdherenceSummary', label: 'Weekly Adherence Summary' },
+      { key: 'followUpReminders', label: 'Follow-up Reminders' },
+      { key: 'newPatientAlerts', label: 'New Patient Alerts' }
+    ];
+    var settings = window.appState.notificationSettings || {};
+    var toggleList = document.getElementById('profile-toggle-list');
+    if (toggleList) {
+      toggleList.innerHTML = toggleDefs.map(function (t) {
+        var on = !!settings[t.key];
+        return '<div class="toggle-row">' +
+          '<span class="toggle-row-label">' + t.label + '</span>' +
+          '<div class="toggle-switch' + (on ? ' on' : '') + '" onclick="toggleNotificationSetting(\'' + t.key + '\')"><div class="toggle-knob"></div></div>' +
+        '</div>';
+      }).join('');
+    }
+
+    var sub = window.appState.subscription || {};
+    var planCard = document.getElementById('profile-plan-card');
+    if (planCard) {
+      planCard.innerHTML =
+        '<div class="plan-card-name">' + (sub.plan || '') + ' <span class="badge badge-green">' + (sub.status || '') + '</span></div>' +
+        '<div class="plan-card-renewal">Renews on ' + (sub.renewalDate || '') + '</div>' +
+        '<div class="plan-feature-list">' + (sub.features || []).map(function (f) {
+          return '<div class="plan-feature-item"><span class="feature-check">✓</span>' + f + '</div>';
+        }).join('') + '</div>';
+    }
+  }
+
+  function setInputValue(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.value = value || '';
+  }
+
+  function saveProfileSettings() {
+    var doctor = window.appState.doctor;
+    doctor.clinic = document.getElementById('profile-clinic-name').value.trim();
+    doctor.address = document.getElementById('profile-clinic-address').value.trim();
+    doctor.phone = document.getElementById('profile-clinic-phone').value.trim();
+    doctor.email = document.getElementById('profile-clinic-email').value.trim();
+    doctor.operatingHours = document.getElementById('profile-clinic-hours').value.trim();
+    doctor.contact = doctor.phone + ' · ' + doctor.email;
+    renderDoctorProfile();
+    renderProfileScreen();
+    toast('Profile settings updated', 'success');
+  }
+
+  function toggleNotificationSetting(key) {
+    var settings = window.appState.notificationSettings;
+    settings[key] = !settings[key];
+    renderProfileScreen();
+    var labels = {
+      criticalLabAlerts: 'Critical Lab Alerts',
+      missedDoseAlerts: 'Missed-Dose Alerts',
+      weeklyAdherenceSummary: 'Weekly Adherence Summary',
+      followUpReminders: 'Follow-up Reminders',
+      newPatientAlerts: 'New Patient Alerts'
+    };
+    toast((labels[key] || 'Setting') + (settings[key] ? ' enabled' : ' disabled'), 'success');
+  }
+
+  function logOut() {
+    toast('Logged out successfully', 'info');
+  }
+
+  /* ==========================================================================
+     GLOBAL STATE SYNC (Stage 4)
+     ========================================================================== */
+  function syncNotifDots() {
+    var notifDot = document.getElementById('topbar-notification-dot');
+    if (notifDot) {
+      var unreadNotifs = (window.appState.notifications || []).filter(function (n) { return !n.read; }).length;
+      notifDot.style.display = unreadNotifs > 0 ? 'block' : 'none';
+    }
+    var msgDot = document.getElementById('topbar-messages-dot');
+    if (msgDot) {
+      var unreadMsgs = (window.appState.conversations || []).reduce(function (sum, c) { return sum + conversationUnreadCount(c); }, 0);
+      msgDot.style.display = unreadMsgs > 0 ? 'block' : 'none';
+    }
+  }
+
+  function globalSearchHandler() {
+    var input = document.getElementById('global-search-input');
+    if (!input) return;
+    var q = input.value.trim().toLowerCase();
+    if (!q) return;
+    var matches = (window.appState.patients || []).filter(function (p) {
+      return p.name.toLowerCase().indexOf(q) !== -1 || p.phone.indexOf(q) !== -1;
+    });
+    if (!matches.length) {
+      toast('No patients found matching "' + input.value.trim() + '"', 'info');
+      return;
+    }
+    patientsFilterState.search = input.value.trim();
+    patientsFilterState.status = 'All';
+    go('patients');
+    var searchBox = document.getElementById('patients-search-input');
+    if (searchBox) searchBox.value = input.value.trim();
+    var chips = document.querySelectorAll('#patients-filter-chips .filter-chip');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('active', chips[i].dataset.status === 'All');
+    }
+  }
+
+  /* ==========================================================================
+     HELPERS
+     ========================================================================== */
+  function getInitials(name) {
+    if (!name) return '';
+    var clean = name.replace(/^Dr\.?\s*/i, '');
+    var parts = clean.trim().split(/\s+/);
+    var initials = '';
+    for (var i = 0; i < parts.length && i < 2; i++) {
+      if (parts[i].length) initials += parts[i].charAt(0).toUpperCase();
+    }
+    return initials;
+  }
+
+  function renderDoctorProfile() {
+    var doctor = window.appState.doctor || {};
+    var nameEl = document.getElementById('sidebar-doctor-name');
+    if (nameEl) nameEl.textContent = doctor.name || '';
+    var captionEl = document.getElementById('sidebar-doctor-caption');
+    if (captionEl) captionEl.textContent = (doctor.clinic || '') + ' · ' + (doctor.tier || '');
+    var sidebarAvatar = document.getElementById('sidebar-doctor-avatar');
+    if (sidebarAvatar) sidebarAvatar.textContent = getInitials(doctor.name);
+    var topbarAvatar = document.getElementById('topbar-avatar');
+    if (topbarAvatar) topbarAvatar.textContent = getInitials(doctor.name);
+  }
+
+  /* ==========================================================================
+     INITIALIZATION
+     ========================================================================== */
+  document.addEventListener('DOMContentLoaded', function () {
+    // Initial screen render (go() also triggers that screen's renderer, e.g. renderDashboardScreen)
+    go(window.appState.currentScreen);
+
+    // Doctor mini-profile chip
+    renderDoctorProfile();
+
+    // Schedule screen: filter chips + Add Appointment button
+    var scheduleChips = document.querySelectorAll('#schedule-filter-chips .filter-chip');
+    for (var sc = 0; sc < scheduleChips.length; sc++) {
+      scheduleChips[sc].addEventListener('click', function () {
+        scheduleFilterChipClick(this);
+      });
+    }
+    var addApptBtn = document.getElementById('btn-add-appointment');
+    if (addApptBtn) {
+      addApptBtn.addEventListener('click', function () {
+        toast('Appointment booking coming soon', 'info');
+      });
+    }
+
+    // Patients screen: search input + filter chips
+    var patientsSearchInput = document.getElementById('patients-search-input');
+    if (patientsSearchInput) {
+      patientsSearchInput.addEventListener('input', function () {
+        patientsFilterState.search = this.value;
+        renderPatientsScreen();
+      });
+    }
+    var patientsChips = document.querySelectorAll('#patients-filter-chips .filter-chip');
+    for (var pc = 0; pc < patientsChips.length; pc++) {
+      patientsChips[pc].addEventListener('click', function () {
+        for (var k = 0; k < patientsChips.length; k++) patientsChips[k].classList.remove('active');
+        this.classList.add('active');
+        patientsFilterState.status = this.dataset.status;
+        renderPatientsScreen();
+      });
+    }
+
+    // Add Patient screen: bottom action bar
+    var addWriteRxBtn = document.getElementById('btn-add-write-rx');
+    if (addWriteRxBtn) {
+      addWriteRxBtn.addEventListener('click', function () {
+        if (!validateAddPatientForm()) return;
+        var newPatient = buildNewPatientFromForm();
+        window.appState.patients.push(newPatient);
+        resetAddPatientForm();
+        toast('Patient added successfully!', 'success');
+        openWriteRx(newPatient.id);
+      });
+    }
+    var saveReturnBtn = document.getElementById('btn-save-return');
+    if (saveReturnBtn) {
+      saveReturnBtn.addEventListener('click', function () {
+        if (!validateAddPatientForm()) return;
+        window.appState.patients.push(buildNewPatientFromForm());
+        resetAddPatientForm();
+        toast('Patient added successfully!', 'success');
+        go('patients');
+      });
+    }
+
+    // Write Rx screen: patient selector + medicine form + tests + action buttons
+    var rxPatientSelect = document.getElementById('rx-patient-select');
+    if (rxPatientSelect) {
+      rxPatientSelect.addEventListener('change', function () {
+        rxDraft = { patientId: this.value ? Number(this.value) : null, drugs: [], tests: [] };
+        renderWriteRxScreen();
+      });
+    }
+    var toggleAddMedicineBtn = document.getElementById('btn-toggle-add-medicine');
+    if (toggleAddMedicineBtn) {
+      toggleAddMedicineBtn.addEventListener('click', function () { toggleAddMedicineForm(); });
+    }
+    var cancelMedicineBtn = document.getElementById('btn-cancel-medicine');
+    if (cancelMedicineBtn) {
+      cancelMedicineBtn.addEventListener('click', function () {
+        resetAddMedicineForm();
+        toggleAddMedicineForm(false);
+      });
+    }
+    var submitMedicineBtn = document.getElementById('btn-submit-medicine');
+    if (submitMedicineBtn) {
+      submitMedicineBtn.addEventListener('click', submitAddMedicine);
+    }
+    var timingChips = document.querySelectorAll('#rx-add-medicine-form .timing-toggle-chip');
+    for (var tc = 0; tc < timingChips.length; tc++) {
+      timingChips[tc].addEventListener('click', function () {
+        this.classList.toggle('selected');
+      });
+    }
+    var addTestBtn = document.getElementById('btn-add-test');
+    if (addTestBtn) {
+      addTestBtn.addEventListener('click', addRxTest);
+    }
+    var testInput = document.getElementById('rx-test-input');
+    if (testInput) {
+      testInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addRxTest();
+        }
+      });
+    }
+    var signSendBtn = document.getElementById('btn-sign-send-rx');
+    if (signSendBtn) {
+      signSendBtn.addEventListener('click', signAndSendRx);
+    }
+    var printDraftBtn = document.getElementById('btn-print-draft-rx');
+    if (printDraftBtn) {
+      printDraftBtn.addEventListener('click', printDraftRx);
+    }
+    var saveDraftBtn = document.getElementById('btn-save-draft-rx');
+    if (saveDraftBtn) {
+      saveDraftBtn.addEventListener('click', function () {
+        toast('Draft saved', 'success');
+      });
+    }
+
+    // Prescription History screen: filter chips + search + write new Rx
+    var rxHistoryChips = document.querySelectorAll('#rx-history-filter-chips .filter-chip');
+    for (var rc = 0; rc < rxHistoryChips.length; rc++) {
+      rxHistoryChips[rc].addEventListener('click', function () {
+        for (var k = 0; k < rxHistoryChips.length; k++) rxHistoryChips[k].classList.remove('active');
+        this.classList.add('active');
+        rxHistoryFilterState.status = this.dataset.status;
+        renderRxHistoryScreen();
+      });
+    }
+    var rxHistorySearchInput = document.getElementById('rx-history-search-input');
+    if (rxHistorySearchInput) {
+      rxHistorySearchInput.addEventListener('input', function () {
+        rxHistoryFilterState.search = this.value;
+        renderRxHistoryScreen();
+      });
+    }
+    var writeNewRxBtn = document.getElementById('btn-write-new-rx');
+    if (writeNewRxBtn) {
+      writeNewRxBtn.addEventListener('click', function () { openWriteRx(); });
+    }
+
+    // Lab Reports screen: filter chips
+    var labChips = document.querySelectorAll('#lab-reports-filter-chips .filter-chip');
+    for (var lc = 0; lc < labChips.length; lc++) {
+      labChips[lc].addEventListener('click', function () {
+        for (var k = 0; k < labChips.length; k++) labChips[k].classList.remove('active');
+        this.classList.add('active');
+        labReportsFilterState.filter = this.dataset.filter;
+        renderLabReportsScreen();
+      });
+    }
+
+    // Messages screen: search, send button, textarea Enter-to-send, header quick actions
+    var convSearchInput = document.getElementById('conversations-search-input');
+    if (convSearchInput) {
+      convSearchInput.addEventListener('input', function () {
+        conversationsSearchTerm = this.value;
+        renderConversationList();
+      });
+    }
+    var sendMsgBtn = document.getElementById('btn-send-message');
+    if (sendMsgBtn) {
+      sendMsgBtn.addEventListener('click', sendMessage);
+    }
+    var chatMsgInput = document.getElementById('chat-message-input');
+    if (chatMsgInput) {
+      chatMsgInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+    var chatWriteRxBtn = document.getElementById('btn-chat-write-rx');
+    if (chatWriteRxBtn) {
+      chatWriteRxBtn.addEventListener('click', chatWriteRx);
+    }
+    var chatViewProfileBtn = document.getElementById('btn-chat-view-profile');
+    if (chatViewProfileBtn) {
+      chatViewProfileBtn.addEventListener('click', chatViewProfile);
+    }
+
+    // Notifications screen: filter chips + mark all read
+    var notifChips = document.querySelectorAll('#notif-filter-chips .filter-chip');
+    for (var nc = 0; nc < notifChips.length; nc++) {
+      notifChips[nc].addEventListener('click', function () {
+        for (var k = 0; k < notifChips.length; k++) notifChips[k].classList.remove('active');
+        this.classList.add('active');
+        notifFilterState.filter = this.dataset.filter;
+        renderNotificationsScreen();
+      });
+    }
+    var markAllReadBtn = document.getElementById('btn-mark-all-read');
+    if (markAllReadBtn) {
+      markAllReadBtn.addEventListener('click', markAllNotificationsRead);
+    }
+
+    // Profile & Settings screen: save + logout
+    var saveProfileBtn = document.getElementById('btn-save-profile');
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', saveProfileSettings);
+    }
+    var logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', logOut);
+    }
+
+    // Sidebar navigation wiring
+    var navLinks = document.querySelectorAll('.nav-link');
+    for (var i = 0; i < navLinks.length; i++) {
+      navLinks[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        go(this.dataset.screen);
+      });
+    }
+
+    // Topbar actions
+    var newRxBtn = document.getElementById('btn-new-prescription');
+    if (newRxBtn) {
+      newRxBtn.addEventListener('click', function () {
+        openWriteRx();
+      });
+    }
+
+    var notifBtn = document.getElementById('topbar-notification');
+    if (notifBtn) {
+      notifBtn.addEventListener('click', function () {
+        go('notifications');
+      });
+    }
+
+    var msgBtn = document.getElementById('topbar-messages');
+    if (msgBtn) {
+      msgBtn.addEventListener('click', function () {
+        go('messages');
+      });
+    }
+
+    var topbarAvatarBtn = document.getElementById('topbar-avatar');
+    if (topbarAvatarBtn) {
+      topbarAvatarBtn.addEventListener('click', function () {
+        go('profile');
+      });
+    }
+
+    var globalSearchInput = document.getElementById('global-search-input');
+    if (globalSearchInput) {
+      globalSearchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          globalSearchHandler();
+        }
+      });
+    }
+
+    // Backdrop closes the slide-in panel
+    var backdrop = document.getElementById('panel-backdrop');
+    if (backdrop) {
+      backdrop.addEventListener('click', closeDetail);
+    }
+  });
+</script>
+</body>
+</html>

@@ -15,6 +15,8 @@ import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded
 import ReportProblemRoundedIcon from "@mui/icons-material/ReportProblemRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import UploadFileRoundedIcon from "@mui/icons-material/UploadFileRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+import MonitorHeartRoundedIcon from "@mui/icons-material/MonitorHeartRounded";
 import type { SvgIconComponent } from "@mui/icons-material";
 import { alpha } from "@mui/material/styles";
 import { requireRole } from "@/lib/auth/requireRole";
@@ -22,12 +24,12 @@ import { createClient } from "@/lib/supabase/server";
 import { theme } from "@/lib/theme";
 import PageHeader from "@/components/PageHeader";
 import StatCard from "@/components/dashboard/StatCard";
-import StatusChip from "@/components/StatusChip";
 import EmptyState from "@/components/EmptyState";
 import LinkButton from "@/components/LinkButton";
 import { REMINDER_TIMEZONE } from "@/lib/reminders/constants";
 import { todayInZone, addDaysToDateStr, zonedTimeToUtc } from "@/lib/reminders/timezone";
 import { scheduledDosesInRange, type PrescriptionMedicineSchedule } from "@/lib/medication/doseSchedule";
+import AppointmentRow from "./AppointmentRow";
 
 const WEEKDAY_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -58,6 +60,29 @@ interface ActivityItem {
   title: string;
   sub: string;
   at: Date;
+}
+
+interface PriorityPatient {
+  patientId: string;
+  name: string;
+  reason: "overdue" | "critical";
+}
+
+type ConditionCategory = "Diabetes" | "Cardiovascular" | "Respiratory" | "Renal" | "Endocrine & Other";
+
+// Buckets a single (comma-split) chronic-condition entry by keyword match. A
+// piece can land in more than one bucket, and anything unmatched falls back
+// to the catch-all "Endocrine & Other" bucket.
+function categorizeCondition(piece: string): ConditionCategory[] {
+  const text = piece.toLowerCase();
+  const categories: ConditionCategory[] = [];
+  if (text.includes("diabet")) categories.push("Diabetes");
+  if (["hypertension", "cardiac", "coronary", "heart"].some((k) => text.includes(k))) categories.push("Cardiovascular");
+  if (["asthma", "copd", "respiratory"].some((k) => text.includes(k))) categories.push("Respiratory");
+  if (["renal", "kidney"].some((k) => text.includes(k))) categories.push("Renal");
+  if (["thyroid", "hormone"].some((k) => text.includes(k))) categories.push("Endocrine & Other");
+  if (categories.length === 0) categories.push("Endocrine & Other");
+  return categories;
 }
 
 export default async function DoctorDashboard() {
@@ -95,7 +120,7 @@ export default async function DoctorDashboard() {
       .lte("start_date", today),
     supabase
       .from("appointments")
-      .select("id, appointment_at, status, patients(profiles(full_name))")
+      .select("id, patient_id, appointment_at, status, patients(profiles(full_name))")
       .eq("doctor_id", user.id)
       .gte("appointment_at", todayStartUtc.toISOString())
       .lt("appointment_at", tomorrowStartUtc.toISOString())
@@ -177,17 +202,57 @@ export default async function DoctorDashboard() {
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 5);
 
-  const { data: reports } =
+  const [{ data: reports }, { data: followUpRows }, { data: conditionRows }] = await Promise.all([
     patientIds.length > 0
-      ? await supabase
+      ? supabase
           .from("medical_reports")
           .select("id, report_type, status, uploaded_at, patient_id, patients(profiles(full_name))")
           .in("patient_id", patientIds)
           .in("status", ["pending", "critical"])
           .order("uploaded_at", { ascending: false })
-      : { data: [] };
+      : Promise.resolve({ data: [] as never[] }),
+    supabase
+      .from("prescriptions")
+      .select("patient_id, follow_up_date, patients(profiles(full_name))")
+      .eq("doctor_id", user.id)
+      .lte("follow_up_date", today)
+      .order("follow_up_date", { ascending: true }),
+    patientIds.length > 0
+      ? supabase.from("patients").select("chronic_conditions").in("profile_id", patientIds)
+      : Promise.resolve({ data: [] as never[] }),
+  ]);
   const pendingReportsCount = (reports ?? []).length;
   const criticalReportsCount = (reports ?? []).filter((r) => r.status === "critical").length;
+
+  // Priority follow-ups: patients overdue for a follow-up (or due today), or
+  // with a critical lab report — deduped by patient, critical takes priority.
+  const priorityMap = new Map<string, PriorityPatient>();
+  for (const report of (reports ?? []).filter((r) => r.status === "critical")) {
+    priorityMap.set(report.patient_id, { patientId: report.patient_id, name: nameOf(report), reason: "critical" });
+  }
+  for (const rx of followUpRows ?? []) {
+    if (priorityMap.has(rx.patient_id)) continue;
+    priorityMap.set(rx.patient_id, { patientId: rx.patient_id, name: nameOf(rx), reason: "overdue" });
+  }
+  const priorityPatients = Array.from(priorityMap.values()).slice(0, 5);
+
+  // Conditions overview: bucket each patient's comma-separated chronic
+  // conditions into categories, counting a patient at most once per bucket.
+  const conditionCounts = new Map<ConditionCategory, number>();
+  for (const row of conditionRows ?? []) {
+    if (!row.chronic_conditions) continue;
+    const patientCategories = new Set<ConditionCategory>();
+    for (const piece of row.chronic_conditions.split(",").map((p) => p.trim()).filter(Boolean)) {
+      for (const category of categorizeCondition(piece)) patientCategories.add(category);
+    }
+    for (const category of patientCategories) {
+      conditionCounts.set(category, (conditionCounts.get(category) ?? 0) + 1);
+    }
+  }
+  const conditionData = Array.from(conditionCounts.entries())
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count);
+  const maxConditionCount = conditionData[0]?.count ?? 0;
 
   const recentStart = addDaysToDateStr(today, -1);
   const alerts: Alert[] = [];
@@ -381,34 +446,17 @@ export default async function DoctorDashboard() {
                 const prof = patient ? (Array.isArray(patient.profiles) ? patient.profiles[0] : patient.profiles) : null;
                 const name = prof?.full_name ?? "Unknown patient";
                 return (
-                  <Stack
+                  <AppointmentRow
                     key={appt.id}
-                    direction="row"
-                    spacing={1.5}
-                    sx={{ alignItems: "center", py: 1.25, borderTop: "1px solid", borderColor: "divider" }}
-                  >
-                    <Typography variant="body2" sx={{ fontFamily: "monospace", width: 70, flexShrink: 0 }}>
-                      {new Date(appt.appointment_at).toLocaleTimeString("en-IN", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        timeZone: REMINDER_TIMEZONE,
-                      })}
-                    </Typography>
-                    <Avatar
-                      sx={{ width: 32, height: 32, fontSize: 13, bgcolor: alpha(theme.palette.primary.main, 0.14), color: "primary.main" }}
-                    >
-                      {name
-                        .split(" ")
-                        .map((p: string) => p[0])
-                        .slice(0, 2)
-                        .join("")
-                        .toUpperCase()}
-                    </Avatar>
-                    <Typography variant="body2" sx={{ fontWeight: 600, flexGrow: 1 }} noWrap>
-                      {name}
-                    </Typography>
-                    <StatusChip status={appt.status} />
-                  </Stack>
+                    patientId={appt.patient_id}
+                    patientName={name}
+                    time={new Date(appt.appointment_at).toLocaleTimeString("en-IN", {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      timeZone: REMINDER_TIMEZONE,
+                    })}
+                    status={appt.status}
+                  />
                 );
               })}
               {(appointmentsToday ?? []).length > 4 && (
@@ -416,6 +464,47 @@ export default async function DoctorDashboard() {
                   + {(appointmentsToday ?? []).length - 4} more today
                 </Typography>
               )}
+            </Box>
+          </Card>
+
+          <Card>
+            <Box sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}>
+              <Typography variant="subtitle1">⏰ Today&apos;s Priority Follow-ups</Typography>
+            </Box>
+            <Box sx={{ px: 2.5, pb: 2 }}>
+              {priorityPatients.length === 0 && (
+                <EmptyState icon={TaskAltRoundedIcon} title="Nothing urgent today" />
+              )}
+              {priorityPatients.map((p, i) => (
+                <Stack
+                  key={p.patientId}
+                  direction="row"
+                  spacing={1.5}
+                  sx={{ alignItems: "center", py: 1.25, borderTop: i === 0 ? "none" : "1px solid", borderColor: "divider" }}
+                >
+                  <Avatar
+                    sx={{ width: 32, height: 32, fontSize: 13, bgcolor: alpha(theme.palette.primary.main, 0.14), color: "primary.main" }}
+                  >
+                    {p.name
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ fontWeight: 600, flexGrow: 1 }} noWrap>
+                    {p.name}
+                  </Typography>
+                  <Chip
+                    label={p.reason === "critical" ? "Critical report needs review" : "Follow-up overdue"}
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(theme.palette[p.reason === "critical" ? "error" : "warning"].main, 0.14),
+                      color: theme.palette[p.reason === "critical" ? "error" : "warning"].dark,
+                    }}
+                  />
+                </Stack>
+              ))}
             </Box>
           </Card>
         </Stack>
@@ -508,6 +597,40 @@ export default async function DoctorDashboard() {
                   </Box>
                   <Typography variant="caption" sx={{ fontWeight: 700, width: 34, textAlign: "right" }}>
                     {m.pct}%
+                  </Typography>
+                </Stack>
+              ))
+            )}
+          </Card>
+
+          <Card sx={{ p: 2.5 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
+              🩺 Conditions Overview
+            </Typography>
+            {conditionData.length === 0 ? (
+              <EmptyState
+                icon={MonitorHeartRoundedIcon}
+                title="No conditions on record"
+                description="Shows once patients have chronic conditions recorded."
+              />
+            ) : (
+              conditionData.map((c) => (
+                <Stack key={c.category} direction="row" spacing={1.25} sx={{ alignItems: "center", mb: 1 }}>
+                  <Typography variant="caption" sx={{ width: 128, flexShrink: 0 }} noWrap>
+                    {c.category}
+                  </Typography>
+                  <Box sx={{ flexGrow: 1, height: 8, borderRadius: 4, bgcolor: "divider", overflow: "hidden" }}>
+                    <Box
+                      sx={{
+                        width: `${(c.count / maxConditionCount) * 100}%`,
+                        height: "100%",
+                        borderRadius: 4,
+                        bgcolor: theme.palette.primary.main,
+                      }}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ fontWeight: 700, width: 74, textAlign: "right", flexShrink: 0 }}>
+                    {c.count} {c.count === 1 ? "patient" : "patients"}
                   </Typography>
                 </Stack>
               ))

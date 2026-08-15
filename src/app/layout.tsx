@@ -1,17 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import ThemeRegistry from "@/components/providers/ThemeRegistry";
+import ToastProvider from "@/components/providers/ToastProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fraunces = Fraunces({
+  variable: "--font-heading",
   subsets: ["latin"],
+  weight: ["700", "800", "900"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -25,10 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}>
       <body>
         <ReduxProvider>
-          <ThemeRegistry>{children}</ThemeRegistry>
+          <ThemeRegistry>
+            <ToastProvider>{children}</ToastProvider>
+          </ThemeRegistry>
         </ReduxProvider>
       </body>
     </html>

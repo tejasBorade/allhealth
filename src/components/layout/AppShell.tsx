@@ -18,12 +18,15 @@ import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import Badge from "@mui/material/Badge";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
 import MenuIcon from "@mui/icons-material/Menu";
 import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import SearchIcon from "@mui/icons-material/Search";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import EventIcon from "@mui/icons-material/Event";
 import MedicationIcon from "@mui/icons-material/Medication";
 import FolderIcon from "@mui/icons-material/Folder";
@@ -104,6 +107,7 @@ export default function AppShell({
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [unreadCount, setUnreadCount] = React.useState(0);
+  const [patientSearch, setPatientSearch] = React.useState("");
 
   React.useEffect(() => {
     if (!userId) return;
@@ -129,6 +133,11 @@ export default function AppShell({
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
+  };
+
+  const handlePatientSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    router.push(`/doctor/patients?q=${encodeURIComponent(patientSearch)}`);
   };
 
   const sidebarContent = (
@@ -294,6 +303,29 @@ export default function AppShell({
               {title}
             </Typography>
           </Box>
+          {role === "doctor" && (
+            <Box
+              component="form"
+              onSubmit={handlePatientSearchSubmit}
+              sx={{ display: { xs: "none", md: "flex" }, flexGrow: 1, maxWidth: 360 }}
+            >
+              <TextField
+                value={patientSearch}
+                onChange={(event) => setPatientSearch(event.target.value)}
+                placeholder="Search patients..."
+                fullWidth
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchRoundedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            </Box>
+          )}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <Tooltip title="Notifications">
               <IconButton
