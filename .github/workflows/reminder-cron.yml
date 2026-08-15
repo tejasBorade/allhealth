@@ -1,0 +1,26 @@
+name: Reminder cron
+
+# Vercel's free Hobby plan only allows once-daily cron jobs, but the
+# appointment/medication reminder routes are designed for a ~15-minute
+# cadence (see src/lib/reminders/constants.ts's DOSE_GRACE_MS/STALE_WINDOW_MS).
+# This workflow is the real trigger for that cadence in production; the
+# once-daily schedule left in vercel.json is just a Hobby-plan-compliant
+# fallback in case this workflow ever stops running.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  call-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appointment reminders
+        run: |
+          curl -sf -X GET "https://allhealth.vercel.app/api/cron/appointment-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+      - name: Medication reminders
+        run: |
+          curl -sf -X GET "https://allhealth.vercel.app/api/cron/medication-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
