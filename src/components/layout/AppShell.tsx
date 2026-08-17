@@ -43,6 +43,7 @@ import { alpha } from "@mui/material/styles";
 import { createClient } from "@/lib/supabase/client";
 import { sidebarGradient } from "@/lib/theme";
 import type { UserRole } from "@/lib/types";
+import ChatWidget from "@/components/chat/ChatWidget";
 
 const DRAWER_WIDTH = 264;
 const ACCENT = "#22D3EE";
@@ -387,6 +388,8 @@ export default function AppShell({
         <Toolbar />
         {children}
       </Box>
+
+      {role === "patient" && <ChatWidget />}
     </Box>
   );
 }
