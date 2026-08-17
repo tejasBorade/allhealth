@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type Anthropic from "@anthropic-ai/sdk";
+import type Groq from "groq-sdk";
 import type { Database } from "@/lib/supabase/types";
 import { bookAppointment } from "@/app/patient/doctors/actions";
 import { cancelAppointment } from "@/app/patient/appointments/actions";
@@ -35,86 +35,113 @@ const NAV_SECTIONS: Record<string, { label: string; href: string }> = {
 // never pass in a different patient_id. RLS (already in place on every one
 // of these tables/buckets) is the real enforcement boundary, not this code.
 
-export const CHAT_TOOLS: Anthropic.Tool[] = [
+export const CHAT_TOOLS: Groq.Chat.ChatCompletionTool[] = [
   {
-    name: "search_doctors",
-    description: "Search approved doctors by specialization or name.",
-    input_schema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "Specialization or doctor name to search for, e.g. 'cardiologist' or 'Sharma'.",
+    type: "function",
+    function: {
+      name: "search_doctors",
+      description: "Search approved doctors by specialization or name.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: {
+            type: "string",
+            description: "Specialization or doctor name to search for, e.g. 'cardiologist' or 'Sharma'.",
+          },
         },
       },
     },
   },
   {
-    name: "list_my_appointments",
-    description: "List the current patient's own appointments, optionally filtered by status.",
-    input_schema: {
-      type: "object",
-      properties: {
-        status: { type: "string", enum: ["scheduled", "completed", "cancelled"] },
-      },
-    },
-  },
-  {
-    name: "book_appointment",
-    description: "Book a new appointment for the current patient with a given doctor at a given date/time.",
-    input_schema: {
-      type: "object",
-      properties: {
-        doctorId: { type: "string", description: "The doctor's id, from search_doctors results." },
-        appointmentAtIso: {
-          type: "string",
-          description: "ISO 8601 date-time for the appointment, e.g. 2026-08-20T10:00:00+05:30.",
+    type: "function",
+    function: {
+      name: "list_my_appointments",
+      description: "List the current patient's own appointments, optionally filtered by status.",
+      parameters: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["scheduled", "completed", "cancelled"] },
         },
       },
-      required: ["doctorId", "appointmentAtIso"],
     },
   },
   {
-    name: "cancel_appointment",
-    description: "Cancel one of the current patient's own scheduled appointments.",
-    input_schema: {
-      type: "object",
-      properties: {
-        appointmentId: { type: "string", description: "The appointment id, from list_my_appointments results." },
-      },
-      required: ["appointmentId"],
-    },
-  },
-  {
-    name: "list_my_prescriptions",
-    description: "List the current patient's own prescriptions, each with a printable link.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "list_my_reports",
-    description:
-      "List the current patient's own downloadable lab reports and completed-visit reports, each with a real link.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "list_my_billing",
-    description:
-      "List the current patient's own billing entries and their status. There is no downloadable invoice for " +
-      "these — never claim a download link exists for a billing entry.",
-    input_schema: { type: "object", properties: {} },
-  },
-  {
-    name: "navigate_to",
-    description: "Get a direct link to a section of the app for the patient to open.",
-    input_schema: {
-      type: "object",
-      properties: {
-        section: {
-          type: "string",
-          enum: ["doctors", "appointments", "prescriptions", "medical-records", "billing", "messages"],
+    type: "function",
+    function: {
+      name: "book_appointment",
+      description: "Book a new appointment for the current patient with a given doctor at a given date/time.",
+      parameters: {
+        type: "object",
+        properties: {
+          doctorId: { type: "string", description: "The doctor's id, from search_doctors results." },
+          appointmentAtIso: {
+            type: "string",
+            description: "ISO 8601 date-time for the appointment, e.g. 2026-08-20T10:00:00+05:30.",
+          },
         },
+        required: ["doctorId", "appointmentAtIso"],
       },
-      required: ["section"],
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "cancel_appointment",
+      description: "Cancel one of the current patient's own scheduled appointments.",
+      parameters: {
+        type: "object",
+        properties: {
+          appointmentId: {
+            type: "string",
+            description: "The appointment id, from list_my_appointments results.",
+          },
+        },
+        required: ["appointmentId"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_my_prescriptions",
+      description: "List the current patient's own prescriptions, each with a printable link.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_my_reports",
+      description:
+        "List the current patient's own downloadable lab reports and completed-visit reports, each with a real link.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_my_billing",
+      description:
+        "List the current patient's own billing entries and their status. There is no downloadable invoice for " +
+        "these — never claim a download link exists for a billing entry.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "navigate_to",
+      description: "Get a direct link to a section of the app for the patient to open.",
+      parameters: {
+        type: "object",
+        properties: {
+          section: {
+            type: "string",
+            enum: ["doctors", "appointments", "prescriptions", "medical-records", "billing", "messages"],
+          },
+        },
+        required: ["section"],
+      },
     },
   },
 ];
@@ -128,6 +155,20 @@ interface DoctorRow {
 
 function singular<T>(value: T | T[]): T | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+// Plain substring matching misses the common "cardiologist" (query) vs.
+// "Cardiology" (stored specialization) mismatch — neither is a substring of
+// the other since they diverge after a shared stem ("cardiolog-ist" vs.
+// "cardiolog-y"). A shared-prefix fallback catches that whole family of
+// person-noun vs. field-noun medical specialty pairs (dermatologist/
+// dermatology, gynecologist/gynecology, pediatrician/pediatrics, ...)
+// without needing a hardcoded synonym table.
+function specializationMatches(specialization: string, query: string): boolean {
+  const spec = specialization.toLowerCase();
+  if (spec.includes(query) || query.includes(spec)) return true;
+  const prefixLen = Math.min(6, spec.length, query.length);
+  return prefixLen >= 4 && spec.slice(0, prefixLen) === query.slice(0, prefixLen);
 }
 
 async function searchDoctors(supabase: SupabaseClient<Database>, query?: string): Promise<ToolRunResult> {
@@ -144,7 +185,7 @@ async function searchDoctors(supabase: SupabaseClient<Database>, query?: string)
       ({ row, profile }) =>
         !q ||
         (profile?.full_name ?? "").toLowerCase().includes(q) ||
-        (row.specialization ?? "").toLowerCase().includes(q)
+        specializationMatches(row.specialization ?? "", q)
     )
     .slice(0, 10)
     .map(({ row, profile }) => ({
