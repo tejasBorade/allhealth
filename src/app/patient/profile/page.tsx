@@ -2,6 +2,7 @@ import PageHeader from "@/components/PageHeader";
 import { requireRole } from "@/lib/auth/requireRole";
 import { createClient } from "@/lib/supabase/server";
 import ProfileForm from "./ProfileForm";
+import MobilePinSettings from "./MobilePinSettings";
 
 export default async function PatientProfilePage() {
   const { user } = await requireRole(["patient"]);
@@ -29,6 +30,7 @@ export default async function PatientProfilePage() {
         subtitle="Keep your personal and medical details up to date."
       />
       <ProfileForm profile={profile} patient={patient} />
+      <MobilePinSettings />
     </>
   );
 }

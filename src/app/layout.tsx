@@ -4,6 +4,7 @@ import "./globals.css";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import ThemeRegistry from "@/components/providers/ThemeRegistry";
 import ToastProvider from "@/components/providers/ToastProvider";
+import AppLockGate from "@/components/mobile/AppLockGate";
 
 const inter = Inter({
   variable: "--font-body",
@@ -38,7 +39,9 @@ export default function RootLayout({
       <body>
         <ReduxProvider>
           <ThemeRegistry>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <AppLockGate>{children}</AppLockGate>
+            </ToastProvider>
           </ThemeRegistry>
         </ReduxProvider>
       </body>
