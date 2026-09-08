@@ -13,6 +13,7 @@ import MedicationRoundedIcon from "@mui/icons-material/MedicationRounded";
 import FolderSharedRoundedIcon from "@mui/icons-material/FolderSharedRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import LinkButton from "@/components/LinkButton";
+import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { theme, brandGradient } from "@/lib/theme";
 
@@ -163,6 +164,7 @@ export default async function Home() {
             </Grid>
           ))}
         </Grid>
+        <Footer sx={{ textAlign: "center", color: "text.secondary", pb: 4 }} />
       </Container>
     </Box>
   );

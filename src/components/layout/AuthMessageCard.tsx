@@ -5,6 +5,7 @@ import { alpha } from "@mui/material/styles";
 import type { SvgIconComponent } from "@mui/icons-material";
 import type { ReactNode } from "react";
 import { theme } from "@/lib/theme";
+import Footer from "@/components/Footer";
 
 type AccentColor = "primary" | "warning" | "error" | "success";
 
@@ -30,6 +31,7 @@ export default function AuthMessageCard({
         justifyContent: "center",
         bgcolor: "background.default",
         p: 3,
+        position: "relative",
       }}
     >
       <Paper sx={{ p: 5, width: 440, textAlign: "center" }} variant="outlined">
@@ -57,6 +59,7 @@ export default function AuthMessageCard({
         </Typography>
         {action}
       </Paper>
+      <Footer sx={{ position: "absolute", bottom: 16, color: "text.secondary" }} />
     </Box>
   );
 }

@@ -44,6 +44,7 @@ import { createClient } from "@/lib/supabase/client";
 import { sidebarGradient } from "@/lib/theme";
 import type { UserRole } from "@/lib/types";
 import ChatWidget from "@/components/chat/ChatWidget";
+import Footer from "@/components/Footer";
 
 const DRAWER_WIDTH = 264;
 const ACCENT = "#22D3EE";
@@ -387,6 +388,7 @@ export default function AppShell({
       >
         <Toolbar />
         {children}
+        <Footer sx={{ mt: 5, pt: 2.5, borderTop: 1, borderColor: "divider", color: "text.secondary" }} />
       </Box>
 
       {role === "patient" && <ChatWidget />}

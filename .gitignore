@@ -37,6 +37,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local Claude Code scratch/reference material — not part of the app, and
+# not meant to be published to this public repo (e.g. design mockups or
+# reference docs dropped in for a session, not vetted for redistribution)
+.claude/*
+!.claude/settings.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

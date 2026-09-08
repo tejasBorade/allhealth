@@ -5,6 +5,7 @@ import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import { alpha } from "@mui/material/styles";
 import { brandGradient } from "@/lib/theme";
+import Footer from "@/components/Footer";
 import type { ReactNode } from "react";
 
 const HIGHLIGHTS = [
@@ -70,13 +71,16 @@ export default function AuthSplitLayout({ children }: { children: ReactNode }) {
         sx={{
           flexGrow: 1,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           bgcolor: "background.default",
           p: 3,
+          position: "relative",
         }}
       >
         {children}
+        <Footer sx={{ position: "absolute", bottom: 16, color: "text.secondary" }} />
       </Box>
     </Box>
   );

@@ -1,0 +1,17 @@
+Copyright (c) 2026 FriendlyHealthy. All rights reserved.
+
+This repository and its contents (including but not limited to source code,
+database schema and migrations, design assets, and documentation) are
+proprietary and confidential.
+
+No part of this repository may be copied, modified, merged, published,
+distributed, sublicensed, or used to create derivative works, in whole or in
+part, without the prior written permission of the copyright holder.
+
+The repository is made visible on a public hosting platform for development
+convenience only. Visibility does not constitute a license or grant of any
+rights under copyright, trademark, or any other intellectual property law.
+
+All third-party open-source dependencies used by this project remain subject
+to their own respective licenses, as declared in package.json and their
+associated package metadata.
